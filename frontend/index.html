@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投資分析系統</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 導航欄 -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h1>🏮 港股投資分析</h1>
+                </div>
+                <div class="nav-menu">
+                    <button class="nav-item active" data-tab="dashboard">儀表板</button>
+                    <button class="nav-item" data-tab="analysis">股票分析</button>
+                    <button class="nav-item" data-tab="watchlist">觀察清單</button>
+                    <button class="nav-item" data-tab="reports">報告</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主要內容區域 -->
+        <main class="main-content">
+            <!-- 儀表板頁面 -->
+            <div id="dashboard" class="tab-content active">
+                <div class="dashboard-header">
+                    <h2>市場概覽</h2>
+                    <div class="last-update">
+                        最後更新: <span id="last-update-time">載入中...</span>
+                    </div>
+                </div>
+
+                <!-- 市場指標卡片 -->
+                <div class="cards-grid">
+                    <div class="card market-card">
+                        <h3>📊 經濟指標</h3>
+                        <div id="economic-indicators" class="indicators-list">
+                            <div class="loading">載入中...</div>
+                        </div>
+                    </div>
+
+                    <div class="card sector-card">
+                        <h3>🏭 行業表現</h3>
+                        <div id="sector-performance" class="sector-list">
+                            <div class="loading">載入中...</div>
+                        </div>
+                    </div>
+
+                    <div class="card watchlist-preview">
+                        <h3>👀 觀察清單預覽</h3>
+                        <div id="watchlist-preview" class="watchlist-items">
+                            <div class="loading">載入中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 股票分析頁面 -->
+            <div id="analysis" class="tab-content">
+                <div class="analysis-header">
+                    <h2>股票分析</h2>
+                    <div class="search-container">
+                        <input type="text" id="stock-search" placeholder="輸入港股代碼 (例: 0700.HK, 0005.HK, 9988.HK)" maxlength="15">
+                        <button id="analyze-btn" class="btn btn-primary">分析</button>
+                    </div>
+                </div>
+
+                <!-- 分析結果 -->
+                <div id="analysis-results" class="analysis-container" style="display: none;">
+                    <!-- 股票基本信息 -->
+                    <div class="stock-info-card">
+                        <div class="stock-header">
+                            <h3 id="stock-name">股票名稱</h3>
+                            <div class="stock-price">
+                                <span id="current-price">$0.00</span>
+                                <span id="price-change" class="price-change">+0.00%</span>
+                            </div>
+                        </div>
+                        <div class="stock-details">
+                            <div class="detail-item">
+                                <span>行業:</span>
+                                <span id="stock-sector">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span>市值:</span>
+                                <span id="market-cap">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 分析評分卡片 -->
+                    <div class="score-cards">
+                        <div class="score-card overall">
+                            <h4>綜合評分</h4>
+                            <div class="score-value" id="overall-score">0</div>
+                            <div class="score-bar">
+                                <div class="score-fill" id="overall-score-bar"></div>
+                            </div>
+                        </div>
+                        <div class="score-card fundamental">
+                            <h4>基本面</h4>
+                            <div class="score-value" id="fundamental-score">0</div>
+                            <div class="score-bar">
+                                <div class="score-fill" id="fundamental-score-bar"></div>
+                            </div>
+                        </div>
+                        <div class="score-card technical">
+                            <h4>技術面</h4>
+                            <div class="score-value" id="technical-score">0</div>
+                            <div class="score-bar">
+                                <div class="score-fill" id="technical-score-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 投資建議 -->
+                    <div class="recommendation-card">
+                        <h4>投資建議</h4>
+                        <div class="recommendation-content">
+                            <div class="recommendation-badge" id="recommendation-badge">
+                                <span id="recommendation-text">分析中...</span>
+                            </div>
+                            <div class="recommendation-details">
+                                <div class="detail-row">
+                                    <span>目標價格:</span>
+                                    <span id="target-price">$0.00</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span>上漲空間:</span>
+                                    <span id="upside-potential">0%</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span>風險等級:</span>
+                                    <span id="risk-level">-</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span>信心度:</span>
+                                    <span id="confidence-level">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 詳細分析 -->
+                    <div class="detailed-analysis">
+                        <div class="analysis-section">
+                            <h4>📈 基本面分析</h4>
+                            <div id="fundamental-details" class="analysis-details">
+                                <!-- 基本面詳情將在這裡動態載入 -->
+                            </div>
+                        </div>
+                        <div class="analysis-section">
+                            <h4>📉 技術面分析</h4>
+                            <div id="technical-details" class="analysis-details">
+                                <!-- 技術面詳情將在這裡動態載入 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 操作按鈕 -->
+                    <div class="action-buttons">
+                        <button id="add-to-watchlist" class="btn btn-secondary">加入觀察清單</button>
+                        <button id="generate-report" class="btn btn-primary">查看報告</button>
+                        <button id="download-pdf" class="btn btn-success">下載報告</button>
+                    </div>
+                </div>
+
+                <!-- 載入指示器 -->
+                <div id="analysis-loading" class="loading-container" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>正在分析股票數據...</p>
+                </div>
+            </div>
+
+            <!-- 觀察清單頁面 -->
+            <div id="watchlist" class="tab-content">
+                <div class="watchlist-header">
+                    <h2>觀察清單</h2>
+                    <button id="batch-analyze" class="btn btn-primary">批量分析</button>
+                </div>
+
+                <div id="watchlist-container" class="watchlist-grid">
+                    <!-- 觀察清單項目將在這裡動態載入 -->
+                </div>
+
+                <div id="empty-watchlist" class="empty-state" style="display: none;">
+                    <h3>觀察清單為空</h3>
+                    <p>在股票分析頁面添加股票到觀察清單</p>
+                </div>
+            </div>
+
+            <!-- 報告頁面 -->
+            <div id="reports" class="tab-content">
+                <div class="reports-header">
+                    <h2>投資報告</h2>
+                    <div class="report-filters">
+                        <select id="report-type">
+                            <option value="individual">個股報告</option>
+                            <option value="portfolio">組合報告</option>
+                        </select>
+                        <input type="text" id="report-symbol" placeholder="股票代碼">
+                        <button id="generate-report-btn" class="btn btn-primary">生成報告</button>
+                    </div>
+                </div>
+
+                <div id="report-content" class="report-container">
+                    <div class="empty-state">
+                        <h3>選擇股票生成報告</h3>
+                        <p>輸入股票代碼並點擊生成報告按鈕</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 通知系統 -->
+        <div id="notification" class="notification" style="display: none;">
+            <span id="notification-message"></span>
+            <button id="notification-close">&times;</button>
+        </div>
+
+        <!-- 模態框 -->
+        <div id="modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">標題</h3>
+                    <button id="modal-close" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    <!-- 模態框內容 -->
+                </div>
+                <div class="modal-footer">
+                    <button id="modal-cancel" class="btn btn-secondary">取消</button>
+                    <button id="modal-confirm" class="btn btn-primary">確認</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 免責聲明 -->
+    <footer class="disclaimer">
+        <p>
+            ⚠️ <strong>重要聲明:</strong> 
+            本系統提供的分析和建議僅供參考，不構成投資建議。
+            投資有風險，入市需謹慎。請根據自身風險承受能力做出投資決策。
+        </p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

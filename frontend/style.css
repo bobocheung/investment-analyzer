@@ -1,0 +1,952 @@
+/* 全局樣式 - 手繪風格 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Comic Sans MS', 'Microsoft JhengHei', cursive, sans-serif;
+    line-height: 1.7;
+    color: #2c3e50;
+    background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 50%, #ffd3a5 100%);
+    min-height: 100vh;
+    position: relative;
+}
+
+/* 手繪紙張紋理背景 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 183, 197, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(255, 218, 121, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* 導航欄 - 手繪風格 */
+.navbar {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 3px solid #ff6b6b;
+    border-image: url("data:image/svg+xml,%3csvg width='100' height='20' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m0,10 q25,5 50,0 t50,0' stroke='%23ff6b6b' stroke-width='3' fill='none'/%3e%3c/svg%3e") 3;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transform: rotate(-0.2deg);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 80px;
+}
+
+.nav-brand h1 {
+    color: #2c3e50;
+    font-size: 1.8em;
+    font-weight: 700;
+    transform: rotate(0.5deg);
+    text-shadow: 2px 2px 0px rgba(255, 107, 107, 0.3);
+    font-family: 'Comic Sans MS', cursive;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 15px;
+}
+
+.nav-item {
+    background: #fff;
+    border: 2px solid #ff6b6b;
+    padding: 12px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    color: #2c3e50;
+    transform: rotate(-1deg);
+    box-shadow: 3px 3px 0px rgba(255, 107, 107, 0.2);
+    font-family: 'Comic Sans MS', cursive;
+}
+
+.nav-item:nth-child(even) {
+    transform: rotate(1deg);
+}
+
+.nav-item:hover {
+    background: #fff5f5;
+    transform: rotate(0deg) scale(1.05);
+    box-shadow: 5px 5px 0px rgba(255, 107, 107, 0.3);
+}
+
+.nav-item.active {
+    background: #ff6b6b;
+    color: white;
+    transform: rotate(0deg) scale(1.1);
+    box-shadow: 4px 4px 0px rgba(255, 107, 107, 0.4);
+}
+
+/* 主要內容區域 */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+    min-height: calc(100vh - 140px);
+}
+
+/* 標籤頁內容 */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 卡片樣式 - 手繪風格 */
+.card {
+    background: #fff;
+    border: 3px solid #4ecdc4;
+    border-radius: 25px;
+    padding: 25px;
+    box-shadow: 8px 8px 0px rgba(78, 205, 196, 0.2);
+    transition: all 0.3s ease;
+    transform: rotate(-0.5deg);
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    background: linear-gradient(45deg, transparent 30%, rgba(78, 205, 196, 0.1) 50%, transparent 70%);
+    border-radius: 25px;
+    z-index: -1;
+}
+
+.card:nth-child(even) {
+    transform: rotate(0.5deg);
+    border-color: #ff6b6b;
+    box-shadow: 8px 8px 0px rgba(255, 107, 107, 0.2);
+}
+
+.card:nth-child(3n) {
+    transform: rotate(-0.3deg);
+    border-color: #feca57;
+    box-shadow: 8px 8px 0px rgba(254, 202, 87, 0.2);
+}
+
+.card:hover {
+    transform: rotate(0deg) scale(1.02);
+    box-shadow: 12px 12px 0px rgba(78, 205, 196, 0.3);
+}
+
+/* 儀表板樣式 */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.dashboard-header h2 {
+    color: white;
+    font-size: 2em;
+    font-weight: 600;
+}
+
+.last-update {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+/* 指標列表 */
+.indicators-list, .sector-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.indicator-item, .sector-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.indicator-item:last-child, .sector-item:last-child {
+    border-bottom: none;
+}
+
+.indicator-label, .sector-name {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.indicator-value, .sector-change {
+    font-weight: 600;
+}
+
+.positive {
+    color: #27ae60;
+}
+
+.negative {
+    color: #e74c3c;
+}
+
+/* 股票分析頁面 */
+.analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.analysis-header h2 {
+    color: white;
+    font-size: 2em;
+    font-weight: 600;
+}
+
+.search-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+#stock-search {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    width: 250px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    outline: none;
+    text-transform: uppercase;
+}
+
+/* 按鈕樣式 - 手繪風格 */
+.btn {
+    padding: 15px 30px;
+    border: 3px solid;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    font-family: 'Comic Sans MS', cursive;
+    transform: rotate(-1deg);
+    box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.btn:nth-child(even) {
+    transform: rotate(1deg);
+}
+
+.btn-primary {
+    background: #ff6b6b;
+    color: white;
+    border-color: #ff5252;
+}
+
+.btn-primary:hover {
+    transform: rotate(0deg) scale(1.05);
+    box-shadow: 8px 8px 0px rgba(255, 107, 107, 0.3);
+    background: #ff5252;
+}
+
+.btn-secondary {
+    background: #4ecdc4;
+    color: white;
+    border-color: #26d0ce;
+}
+
+.btn-secondary:hover {
+    background: #26d0ce;
+    transform: rotate(0deg) scale(1.05);
+    box-shadow: 8px 8px 0px rgba(78, 205, 196, 0.3);
+}
+
+.btn-success {
+    background: #95e1d3;
+    color: #2c3e50;
+    border-color: #6bcf7f;
+}
+
+.btn-success:hover {
+    background: #6bcf7f;
+    color: white;
+    transform: rotate(0deg) scale(1.05);
+    box-shadow: 8px 8px 0px rgba(107, 207, 127, 0.3);
+}
+
+/* 分析結果容器 */
+.analysis-container {
+    display: grid;
+    gap: 25px;
+}
+
+/* 股票信息卡片 */
+.stock-info-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.stock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.stock-header h3 {
+    color: #2c3e50;
+    font-size: 1.5em;
+}
+
+.stock-price {
+    text-align: right;
+}
+
+#current-price {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.price-change {
+    display: block;
+    font-size: 1em;
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+.stock-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* 評分卡片 */
+.score-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.score-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.score-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #e74c3c 0%, #f39c12 50%, #27ae60 100%);
+}
+
+.score-card h4 {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.score-value {
+    font-size: 2.5em;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.score-bar {
+    width: 100%;
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.score-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #e74c3c 0%, #f39c12 50%, #27ae60 100%);
+    border-radius: 4px;
+    transition: width 0.8s ease;
+}
+
+/* 投資建議卡片 */
+.recommendation-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.recommendation-card h4 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+}
+
+.recommendation-content {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 25px;
+    align-items: center;
+}
+
+.recommendation-badge {
+    padding: 15px 30px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.1em;
+    text-align: center;
+    color: white;
+    min-width: 120px;
+}
+
+.recommendation-badge.buy {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+}
+
+.recommendation-badge.hold {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+}
+
+.recommendation-badge.sell {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.recommendation-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+/* 詳細分析 */
+.detailed-analysis {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.analysis-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-section h4 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+}
+
+.analysis-details {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.metric-item:last-child {
+    border-bottom: none;
+}
+
+.metric-label {
+    font-weight: 500;
+    color: #666;
+}
+
+.metric-value {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* 操作按鈕 */
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* 載入指示器 */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+/* 觀察清單 */
+.watchlist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.watchlist-header h2 {
+    color: white;
+    font-size: 2em;
+    font-weight: 600;
+}
+
+.watchlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.watchlist-item {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.watchlist-item:hover {
+    transform: translateY(-5px);
+}
+
+.watchlist-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.watchlist-symbol {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.remove-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease;
+}
+
+.remove-btn:hover {
+    background: #c0392b;
+}
+
+/* 空狀態 */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state h3 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #666;
+}
+
+/* 報告頁面 */
+.reports-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.reports-header h2 {
+    color: white;
+    font-size: 2em;
+    font-weight: 600;
+}
+
+.report-filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.report-filters select,
+.report-filters input {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    outline: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.report-container {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    min-height: 400px;
+}
+
+/* 通知系統 */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #2c3e50;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    max-width: 400px;
+    animation: slideIn 0.3s ease;
+}
+
+.notification.success {
+    background: #27ae60;
+}
+
+.notification.error {
+    background: #e74c3c;
+}
+
+.notification.warning {
+    background: #f39c12;
+}
+
+#notification-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* 模態框 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 15px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalIn 0.3s ease;
+}
+
+@keyframes modalIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-header h3 {
+    color: #2c3e50;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px 25px;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* 免責聲明 */
+.disclaimer {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid #ddd;
+    margin-top: 40px;
+}
+
+.disclaimer p {
+    color: #666;
+    font-size: 14px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .nav-container {
+        flex-direction: column;
+        height: auto;
+        padding: 15px 20px;
+    }
+
+    .nav-menu {
+        margin-top: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .main-content {
+        padding: 20px 15px;
+    }
+
+    .dashboard-header,
+    .analysis-header,
+    .watchlist-header,
+    .reports-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .search-container {
+        width: 100%;
+    }
+
+    #stock-search {
+        flex: 1;
+        width: auto;
+    }
+
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .score-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .detailed-analysis {
+        grid-template-columns: 1fr;
+    }
+
+    .recommendation-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .recommendation-details {
+        grid-template-columns: 1fr;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .report-filters {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .report-filters select,
+    .report-filters input {
+        width: 100%;
+    }
+
+    .notification {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+    }
+
+    .modal-content {
+        margin: 20px;
+        max-height: calc(100vh - 40px);
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-brand h1 {
+        font-size: 1.2em;
+    }
+
+    .nav-item {
+        padding: 8px 15px;
+        font-size: 13px;
+    }
+
+    .dashboard-header h2,
+    .analysis-header h2,
+    .watchlist-header h2,
+    .reports-header h2 {
+        font-size: 1.5em;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .stock-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .stock-price {
+        text-align: left;
+    }
+
+    .score-value {
+        font-size: 2em;
+    }
+}
