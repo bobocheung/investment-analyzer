@@ -5,6 +5,8 @@ import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import os
+import time
+import random
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,11 +15,80 @@ class DataCollector:
     def __init__(self):
         self.alpha_vantage_key = os.getenv('ALPHA_VANTAGE_API_KEY', 'demo')
         self.fred_api_key = os.getenv('FRED_API_KEY', 'demo')
+        self.request_delay = 1.0  # 請求間隔（秒）
+        self.max_retries = 3  # 最大重試次數
+    
+    def safe_yfinance_request(self, symbol, max_retries=3, delay=1.0):
+        """安全的yfinance請求，帶重試機制"""
+        for attempt in range(max_retries):
+            try:
+                # 添加隨機延遲避免被限制
+                if attempt > 0:
+                    time.sleep(delay * (attempt + 1) + random.uniform(0.5, 1.5))
+                
+                ticker = yf.Ticker(symbol)
+                
+                # 設置更寬鬆的請求參數
+                info = ticker.info
+                if info and len(info) > 1:  # 確保獲取到有效數據
+                    return ticker
+                    
+            except Exception as e:
+                print(f"Attempt {attempt + 1} failed for {symbol}: {str(e)}")
+                if attempt == max_retries - 1:
+                    print(f"All attempts failed for {symbol}")
+                    return None
+                continue
+        
+        return None
+    
+    def _get_fallback_stock_info(self, symbol: str) -> Dict:
+        """當Yahoo Finance失敗時的回退股票信息"""
+        print(f"Using fallback data for {symbol}")
+        
+        # 基於股票代碼提供一些基本信息
+        company_names = {
+            '0700.HK': 'Tencent Holdings Ltd',
+            '0005.HK': 'HSBC Holdings plc',
+            '0941.HK': 'China Mobile Limited',
+            '1398.HK': 'Industrial and Commercial Bank of China Limited',
+            '3988.HK': 'Bank of China Limited',
+            '0939.HK': 'China Construction Bank Corporation',
+            '2318.HK': 'Ping An Insurance (Group) Company of China, Ltd.',
+            '1299.HK': 'AIA Group Limited',
+            '0388.HK': 'Hong Kong Exchanges and Clearing Limited',
+            '0007.HK': 'WISDOM WEALTH'
+        }
+        
+        return {
+            'symbol': symbol,
+            'name': company_names.get(symbol, symbol.replace('.HK', '')),
+            'current_price': 0.0,
+            'market_cap': 0,
+            'pe_ratio': None,
+            'pb_ratio': None,
+            'dividend_yield': None,
+            'beta': None,
+            'eps': None,
+            'book_value': None,
+            'debt_to_equity': None,
+            'roe': None,
+            'sector': '未分類',
+            'industry': '未分類',
+            'currency': 'HKD',
+            'exchange': 'HKG',
+            'data_source': 'fallback',
+            'last_updated': datetime.now().isoformat()
+        }
     
     def get_stock_info(self, symbol: str) -> Dict:
         """獲取股票基本信息"""
         try:
-            ticker = yf.Ticker(symbol)
+            print(f"Fetching stock info for {symbol}...")
+            ticker = self.safe_yfinance_request(symbol)
+            if not ticker:
+                print(f"Failed to get ticker for {symbol}")
+                return self._get_fallback_stock_info(symbol)
             info = ticker.info
             
             # 處理缺失數據，提供更有意義的默認值
