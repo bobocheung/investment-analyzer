@@ -368,5 +368,11 @@ if __name__ == '__main__':
         print(f"⚠️ Warning: Scheduler failed to start: {e}")
     
     # 啟動Flask應用
-    print("🌐 Starting Flask app on http://0.0.0.0:8080")
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    port = int(os.environ.get('PORT', 8080))
+    debug_mode = os.environ.get('FLASK_ENV') != 'production'
+    
+    print(f"🌐 Starting Flask app on http://0.0.0.0:{port}")
+    print(f"🔧 Debug mode: {debug_mode}")
+    
+    if __name__ == '__main__':
+        app.run(debug=debug_mode, host='0.0.0.0', port=port, threaded=True)
