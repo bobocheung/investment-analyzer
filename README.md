@@ -48,7 +48,7 @@ pip install -r requirements.txt
 3. **啟動應用**
 ```bash
 cd backend
-python app.py
+python3 app.py
 ```
 
 4. **訪問應用**
