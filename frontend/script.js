@@ -198,9 +198,11 @@ function displayAnalysisResults(data) {
     const technicalAnalysis = recommendation.details?.technical_analysis || {};
     
     // 顯示股票基本信息
-    elements.stockName.textContent = `${data.symbol} - ${stockInfo.name || 'N/A'}`;
-    elements.currentPrice.textContent = `$${(recommendation.current_price || 0).toFixed(2)}`;
-    elements.stockSector.textContent = stockInfo.sector || 'N/A';
+    elements.stockName.textContent = `${data.symbol} - ${stockInfo.name || data.symbol}`;
+    // 優先使用 stockInfo 中的當前價格，然後是 recommendation 中的
+    const currentPrice = stockInfo.current_price || recommendation.current_price || 0;
+    elements.currentPrice.textContent = currentPrice > 0 ? `$${currentPrice.toFixed(2)}` : '價格獲取中';
+    elements.stockSector.textContent = stockInfo.sector || '未分類';
     elements.marketCap.textContent = formatMarketCap(stockInfo.market_cap);
     
     // 顯示評分
@@ -209,14 +211,16 @@ function displayAnalysisResults(data) {
     updateScore(elements.technicalScore, elements.technicalScoreBar, recommendation.technical_score || 0);
     
     // 顯示投資建議
-    const recText = recommendation.recommendation || 'N/A';
+    const recText = recommendation.recommendation || '分析中';
     elements.recommendationText.textContent = recText;
     elements.recommendationBadge.className = `recommendation-badge ${getRecommendationClass(recText)}`;
     
-    elements.targetPrice.textContent = `$${(recommendation.target_price || 0).toFixed(2)}`;
-    elements.upsidePotential.textContent = `${(recommendation.upside_potential || 0).toFixed(1)}%`;
-    elements.riskLevel.textContent = recommendation.risk_level || 'N/A';
-    elements.confidenceLevel.textContent = recommendation.confidence || 'N/A';
+    // 優先使用 stockInfo 中的目標價格
+    const targetPrice = stockInfo.target_price || recommendation.target_price;
+    elements.targetPrice.textContent = targetPrice && targetPrice > 0 ? `$${targetPrice.toFixed(2)}` : '計算中';
+    elements.upsidePotential.textContent = recommendation.upside_potential ? `${recommendation.upside_potential.toFixed(1)}%` : '計算中';
+    elements.riskLevel.textContent = recommendation.risk_level || '評估中';
+    elements.confidenceLevel.textContent = recommendation.confidence || '評估中';
     
     // 顯示詳細分析
     displayFundamentalDetails(fundamentalAnalysis);
@@ -239,7 +243,7 @@ function getRecommendationClass(recommendation) {
 }
 
 function formatMarketCap(marketCap) {
-    if (!marketCap) return 'N/A';
+    if (!marketCap || marketCap === 0) return '數據不可用';
     
     if (marketCap >= 1e12) {
         return `$${(marketCap / 1e12).toFixed(2)}T`;
@@ -254,40 +258,106 @@ function formatMarketCap(marketCap) {
 function displayFundamentalDetails(analysis) {
     elements.fundamentalDetails.innerHTML = '';
     
+    // 從全局的 currentAnalysis 中獲取 stockInfo
+    const stockInfo = currentAnalysis?.stock_info || {};
+    
     const metrics = [
-        { label: 'PE比率', value: analysis.pe_analysis?.ratio, format: 'ratio' },
-        { label: 'ROE', value: analysis.roe_analysis?.ratio, format: 'percentage' },
-        { label: '債務股權比', value: analysis.debt_analysis?.ratio, format: 'ratio' },
-        { label: '利潤率', value: analysis.margin_analysis?.ratio, format: 'percentage' },
-        { label: 'PB比率', value: analysis.pb_analysis?.ratio, format: 'ratio' }
+        { 
+            label: 'PE比率', 
+            value: analysis.pe_analysis?.ratio || stockInfo.pe_ratio, 
+            format: 'ratio' 
+        },
+        { 
+            label: 'ROE', 
+            value: analysis.roe_analysis?.ratio || stockInfo.roe, 
+            format: 'percentage' 
+        },
+        { 
+            label: '債務股權比', 
+            value: analysis.debt_analysis?.ratio || stockInfo.debt_to_equity, 
+            format: 'ratio' 
+        },
+        { 
+            label: '利潤率', 
+            value: analysis.margin_analysis?.ratio || stockInfo.profit_margin, 
+            format: 'percentage' 
+        },
+        { 
+            label: 'PB比率', 
+            value: analysis.pb_analysis?.ratio || stockInfo.price_to_book, 
+            format: 'ratio' 
+        }
     ];
     
     metrics.forEach(metric => {
-        if (metric.value !== undefined && metric.value !== null) {
+        if (metric.value !== undefined && metric.value !== null && metric.value !== 0) {
             const item = createMetricItem(metric.label, metric.value, metric.format);
             elements.fundamentalDetails.appendChild(item);
         }
     });
+    
+    // 如果沒有任何指標，顯示提示信息
+    if (elements.fundamentalDetails.children.length === 0) {
+        const noDataDiv = document.createElement('div');
+        noDataDiv.className = 'no-data-message';
+        noDataDiv.textContent = '基本面數據獲取中...';
+        elements.fundamentalDetails.appendChild(noDataDiv);
+    }
 }
 
 function displayTechnicalDetails(analysis) {
     elements.technicalDetails.innerHTML = '';
     
+    // 從全局的 currentAnalysis 中獲取技術指標
+    const technicalIndicators = currentAnalysis?.technical_indicators || {};
+    
     const metrics = [
-        { label: 'RSI', value: analysis.rsi_analysis?.value, format: 'decimal' },
-        { label: 'MACD', value: analysis.macd_analysis?.macd, format: 'decimal' },
-        { label: 'SMA 20', value: analysis.ma_analysis?.sma_20, format: 'price' },
-        { label: 'SMA 50', value: analysis.ma_analysis?.sma_50, format: 'price' },
-        { label: 'SMA 200', value: analysis.ma_analysis?.sma_200, format: 'price' },
-        { label: '成交量比率', value: analysis.volume_analysis?.ratio, format: 'ratio' }
+        { 
+            label: 'RSI', 
+            value: analysis.rsi_analysis?.value || technicalIndicators.rsi, 
+            format: 'decimal' 
+        },
+        { 
+            label: 'MACD', 
+            value: analysis.macd_analysis?.macd || technicalIndicators.macd, 
+            format: 'decimal' 
+        },
+        { 
+            label: 'SMA 20', 
+            value: analysis.ma_analysis?.sma_20 || technicalIndicators.sma_20, 
+            format: 'price' 
+        },
+        { 
+            label: 'SMA 50', 
+            value: analysis.ma_analysis?.sma_50 || technicalIndicators.sma_50, 
+            format: 'price' 
+        },
+        { 
+            label: 'SMA 200', 
+            value: analysis.ma_analysis?.sma_200 || technicalIndicators.sma_200, 
+            format: 'price' 
+        },
+        { 
+            label: '成交量比率', 
+            value: analysis.volume_analysis?.ratio || 1.0, 
+            format: 'ratio' 
+        }
     ];
     
     metrics.forEach(metric => {
-        if (metric.value !== undefined && metric.value !== null) {
+        if (metric.value !== undefined && metric.value !== null && metric.value !== 0) {
             const item = createMetricItem(metric.label, metric.value, metric.format);
             elements.technicalDetails.appendChild(item);
         }
     });
+    
+    // 如果沒有任何指標，顯示提示信息
+    if (elements.technicalDetails.children.length === 0) {
+        const noDataDiv = document.createElement('div');
+        noDataDiv.className = 'no-data-message';
+        noDataDiv.textContent = '技術面數據計算中...';
+        elements.technicalDetails.appendChild(noDataDiv);
+    }
 }
 
 function createMetricItem(label, value, format) {
@@ -309,7 +379,7 @@ function createMetricItem(label, value, format) {
 }
 
 function formatValue(value, format) {
-    if (value === null || value === undefined) return 'N/A';
+    if (value === null || value === undefined || isNaN(value)) return '計算中';
     
     switch (format) {
         case 'percentage':

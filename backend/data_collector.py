@@ -1,6 +1,7 @@
 import yfinance as yf
 import requests
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import os
@@ -19,25 +20,64 @@ class DataCollector:
             ticker = yf.Ticker(symbol)
             info = ticker.info
             
+            # 處理缺失數據，提供更有意義的默認值
+            def safe_get(key, default=None, data_type=None):
+                value = info.get(key, default)
+                if value is None or value == 'N/A' or (isinstance(value, (int, float)) and np.isnan(value)):
+                    return default
+                if data_type == 'float' and isinstance(value, (int, float)):
+                    return float(value) if not np.isnan(value) else default
+                return value
+            
+            # 獲取當前價格，嘗試多個字段
+            current_price = (safe_get('currentPrice', 0, 'float') or 
+                           safe_get('regularMarketPrice', 0, 'float') or 
+                           safe_get('previousClose', 0, 'float'))
+            
+            # 獲取公司名稱，嘗試多個字段
+            company_name = (safe_get('longName') or 
+                          safe_get('shortName') or 
+                          symbol)
+            
+            # 獲取行業信息
+            sector = safe_get('sector') or '未分類'
+            industry = safe_get('industry') or '未分類'
+            
             return {
                 'symbol': symbol,
-                'name': info.get('longName', ''),
-                'sector': info.get('sector', ''),
-                'industry': info.get('industry', ''),
-                'market_cap': info.get('marketCap', 0),
-                'pe_ratio': info.get('trailingPE', 0),
-                'forward_pe': info.get('forwardPE', 0),
-                'price_to_book': info.get('priceToBook', 0),
-                'debt_to_equity': info.get('debtToEquity', 0),
-                'roe': info.get('returnOnEquity', 0),
-                'profit_margin': info.get('profitMargins', 0),
-                'current_price': info.get('currentPrice', 0),
-                'target_price': info.get('targetMeanPrice', 0),
-                'recommendation': info.get('recommendationMean', 0)
+                'name': company_name,
+                'sector': sector,
+                'industry': industry,
+                'market_cap': safe_get('marketCap', 0, 'float'),
+                'pe_ratio': safe_get('trailingPE', None, 'float'),
+                'forward_pe': safe_get('forwardPE', None, 'float'),
+                'price_to_book': safe_get('priceToBook', None, 'float'),
+                'debt_to_equity': safe_get('debtToEquity', None, 'float'),
+                'roe': safe_get('returnOnEquity', None, 'float'),
+                'profit_margin': safe_get('profitMargins', None, 'float'),
+                'current_price': current_price,
+                'target_price': safe_get('targetMeanPrice', None, 'float'),
+                'recommendation': safe_get('recommendationMean', None, 'float')
             }
         except Exception as e:
             print(f"Error fetching stock info for {symbol}: {e}")
-            return {}
+            # 返回基本信息而不是空字典
+            return {
+                'symbol': symbol,
+                'name': symbol,
+                'sector': '數據不可用',
+                'industry': '數據不可用',
+                'market_cap': 0,
+                'pe_ratio': None,
+                'forward_pe': None,
+                'price_to_book': None,
+                'debt_to_equity': None,
+                'roe': None,
+                'profit_margin': None,
+                'current_price': 0,
+                'target_price': None,
+                'recommendation': None
+            }
     
     def get_stock_prices(self, symbol: str, period: str = "1y") -> List[Dict]:
         """獲取股價歷史數據"""

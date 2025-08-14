@@ -184,7 +184,7 @@ class ReportGenerator:
             <div class="card risk">
                 <h3>風險等級</h3>
                 <div class="value">{{ risk_level }}</div>
-                <div>波動率: {{ "%.1f%"|format(volatility * 100) if volatility else "N/A" }}</div>
+                <div>波動率: {{ "%.1f%"|format(volatility * 100) if volatility else "計算中" }}</div>
             </div>
         </div>
 
@@ -195,15 +195,15 @@ class ReportGenerator:
                     <h4>價格信息</h4>
                                     <div class="metric">
                     <span class="metric-label">當前價格</span>
-                    <span class="metric-value">${{ current_price|round(2) if current_price else "N/A" }}</span>
+                    <span class="metric-value">${{ current_price|round(2) if current_price else "數據不可用" }}</span>
                 </div>
                 <div class="metric">
                     <span class="metric-label">目標價格</span>
-                    <span class="metric-value">${{ target_price|round(2) if target_price else "N/A" }}</span>
+                    <span class="metric-value">${{ target_price|round(2) if target_price else "計算中" }}</span>
                 </div>
                 <div class="metric">
                     <span class="metric-label">上漲空間</span>
-                    <span class="metric-value">{{ upside_potential|round(1) if upside_potential else "N/A" }}%</span>
+                    <span class="metric-value">{{ upside_potential|round(1) if upside_potential else "計算中" }}%</span>
                 </div>
                 </div>
                 
@@ -240,7 +240,7 @@ class ReportGenerator:
                     </div>
                     <div class="metric">
                         <span class="metric-label">PB比率</span>
-                        <span class="metric-value">{{ "%.2f"|format(fundamental_analysis.pb_analysis.ratio) if fundamental_analysis.pb_analysis else "N/A" }}</span>
+                        <span class="metric-value">{{ "%.2f"|format(fundamental_analysis.pb_analysis.ratio) if fundamental_analysis.pb_analysis else "數據不可用" }}</span>
                     </div>
                 </div>
                 {% endif %}

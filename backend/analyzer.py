@@ -148,7 +148,7 @@ class InvestmentAnalyzer:
         try:
             # PE比率分析
             pe_ratio = stock_info.get('pe_ratio', 0)
-            if pe_ratio > 0:
+            if pe_ratio and pe_ratio > 0:
                 if pe_ratio < 15:
                     pe_score = 10
                 elif pe_ratio < 25:
@@ -162,7 +162,7 @@ class InvestmentAnalyzer:
             
             # ROE分析
             roe = stock_info.get('roe', 0)
-            if roe > 0:
+            if roe and roe > 0:
                 if roe > 0.20:
                     roe_score = 10
                 elif roe > 0.15:
@@ -178,7 +178,7 @@ class InvestmentAnalyzer:
             
             # 債務股權比分析
             debt_to_equity = stock_info.get('debt_to_equity', 0)
-            if debt_to_equity >= 0:
+            if debt_to_equity is not None and debt_to_equity >= 0:
                 if debt_to_equity < 0.3:
                     debt_score = 10
                 elif debt_to_equity < 0.6:
@@ -192,7 +192,7 @@ class InvestmentAnalyzer:
             
             # 利潤率分析
             profit_margin = stock_info.get('profit_margin', 0)
-            if profit_margin > 0:
+            if profit_margin and profit_margin > 0:
                 if profit_margin > 0.20:
                     margin_score = 10
                 elif profit_margin > 0.15:
@@ -208,7 +208,7 @@ class InvestmentAnalyzer:
             
             # PB比率分析
             pb_ratio = stock_info.get('price_to_book', 0)
-            if pb_ratio > 0:
+            if pb_ratio and pb_ratio > 0:
                 if pb_ratio < 1.5:
                     pb_score = 10
                 elif pb_ratio < 3.0:
@@ -464,9 +464,20 @@ class InvestmentAnalyzer:
             print(f"Error generating recommendation: {e}")
             return {
                 'overall_score': 0,
-                'recommendation': '無法分析',
+                'fundamental_score': 0,
+                'technical_score': 0,
+                'recommendation': '數據不足，無法分析',
+                'confidence': '低',
                 'risk_level': '未知',
-                'target_price': 0
+                'target_price': 0,
+                'current_price': stock_info.get('current_price', 0),
+                'upside_potential': 0,
+                'analysis_date': datetime.now().strftime('%Y-%m-%d'),
+                'details': {
+                    'fundamental_analysis': fundamental_analysis,
+                    'technical_analysis': technical_analysis,
+                    'risk_metrics': {}
+                }
             }
     
     def analyze_stock(self, stock_data: Dict) -> Dict:
@@ -499,6 +510,7 @@ class InvestmentAnalyzer:
             return {
                 'symbol': symbol,
                 'analysis_timestamp': datetime.now().isoformat(),
+                'stock_info': stock_info,
                 'technical_indicators': technical_indicators,
                 'fundamental_analysis': fundamental_analysis,
                 'technical_analysis': technical_analysis,
@@ -508,7 +520,34 @@ class InvestmentAnalyzer:
             
         except Exception as e:
             print(f"Error in stock analysis: {e}")
-            return {'error': str(e)}
+            # 返回基本的分析結果而不是錯誤
+            return {
+                'symbol': stock_data.get('symbol', ''),
+                'analysis_timestamp': datetime.now().isoformat(),
+                'stock_info': stock_data.get('stock_info', {}),
+                'technical_indicators': {},
+                'fundamental_analysis': {},
+                'technical_analysis': {},
+                'risk_metrics': {},
+                'recommendation': {
+                    'overall_score': 0,
+                    'fundamental_score': 0,
+                    'technical_score': 0,
+                    'recommendation': '數據不足，無法分析',
+                    'confidence': '低',
+                    'risk_level': '未知',
+                    'target_price': 0,
+                    'current_price': stock_data.get('stock_info', {}).get('current_price', 0),
+                    'upside_potential': 0,
+                    'analysis_date': datetime.now().strftime('%Y-%m-%d'),
+                    'details': {
+                        'fundamental_analysis': {},
+                        'technical_analysis': {},
+                        'risk_metrics': {}
+                    }
+                },
+                'error': str(e)
+            }
 
 # 使用示例
 if __name__ == "__main__":

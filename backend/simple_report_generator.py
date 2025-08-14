@@ -10,14 +10,14 @@ class SimpleReportGenerator:
         """生成簡化的HTML報告"""
         try:
             # 提取數據
-            symbol = analysis_data.get('symbol', 'N/A')
+            symbol = analysis_data.get('symbol', '未知股票')
             stock_info = analysis_data.get('stock_info', {})
             recommendation = analysis_data.get('recommendation', {})
             
             # 安全地獲取數值
-            def safe_format(value, format_str="%.2f", default="N/A"):
+            def safe_format(value, format_str="%.2f", default="數據不可用"):
                 try:
-                    if value is not None and value != 0:
+                    if value is not None:
                         return format_str % value
                     return default
                 except:
@@ -37,9 +37,9 @@ class SimpleReportGenerator:
                             return f"{value/1e6:.2f}百萬"
                         else:
                             return f"{value:,.0f}"
-                    return "N/A"
+                    return "數據不可用"
                 except:
-                    return "N/A"
+                    return "數據不可用"
             
             current_price = safe_format(recommendation.get('current_price'))
             target_price = safe_format(recommendation.get('target_price'))
@@ -193,14 +193,14 @@ class SimpleReportGenerator:
     <div class="container">
         <div class="header">
             <h1>🏮 {symbol} 港股投資分析報告</h1>
-            <div class="subtitle">{stock_info.get('name', 'N/A')} | 生成時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</div>
+            <div class="subtitle">{stock_info.get('name', symbol)} | 生成時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</div>
         </div>
 
         <div class="summary-cards">
             <div class="card">
                 <h3>💡 投資建議</h3>
-                <div class="value">{recommendation.get('recommendation', 'N/A')}</div>
-                <div>信心度: {recommendation.get('confidence', 'N/A')}</div>
+                <div class="value">{recommendation.get('recommendation', '分析中')}</div>
+                <div>信心度: {recommendation.get('confidence', '評估中')}</div>
             </div>
             <div class="card">
                 <h3>📊 綜合評分</h3>
@@ -209,7 +209,7 @@ class SimpleReportGenerator:
             </div>
             <div class="card">
                 <h3>⚠️ 風險等級</h3>
-                <div class="value">{recommendation.get('risk_level', 'N/A')}</div>
+                <div class="value">{recommendation.get('risk_level', '評估中')}</div>
                 <div>投資風險評估</div>
             </div>
         </div>
@@ -262,11 +262,11 @@ class SimpleReportGenerator:
                     </div>
                     <div class="metric">
                         <span class="metric-label">公司名稱</span>
-                        <span class="metric-value">{stock_info.get('name', 'N/A')}</span>
+                        <span class="metric-value">{stock_info.get('name', symbol)}</span>
                     </div>
                     <div class="metric">
                         <span class="metric-label">所屬行業</span>
-                        <span class="metric-value">{stock_info.get('sector', 'N/A')}</span>
+                        <span class="metric-value">{stock_info.get('sector', '未分類')}</span>
                     </div>
                     <div class="metric">
                         <span class="metric-label">市值</span>
