@@ -8,6 +8,7 @@ import os
 import time
 import random
 from dotenv import load_dotenv
+from cache_manager import cache_manager, cached
 
 load_dotenv()
 
@@ -82,13 +83,22 @@ class DataCollector:
         }
     
     def get_stock_info(self, symbol: str) -> Dict:
-        """獲取股票基本信息"""
+        """獲取股票基本信息（帶緩存）"""
+        # 先檢查緩存
+        cached_data = cache_manager.get('stock_info', symbol)
+        if cached_data:
+            print(f"📦 Using cached stock info for {symbol}")
+            return cached_data
+        
         try:
-            print(f"Fetching stock info for {symbol}...")
+            print(f"🌐 Fetching fresh stock info for {symbol}...")
             ticker = self.safe_yfinance_request(symbol)
             if not ticker:
                 print(f"Failed to get ticker for {symbol}")
-                return self._get_fallback_stock_info(symbol)
+                fallback_data = self._get_fallback_stock_info(symbol)
+                # 緩存回退數據（較短時間）
+                cache_manager.set('stock_info', symbol, fallback_data)
+                return fallback_data
             info = ticker.info
             
             # 處理缺失數據，提供更有意義的默認值
@@ -114,7 +124,7 @@ class DataCollector:
             sector = safe_get('sector') or '未分類'
             industry = safe_get('industry') or '未分類'
             
-            return {
+            stock_info = {
                 'symbol': symbol,
                 'name': company_name,
                 'sector': sector,
@@ -128,8 +138,15 @@ class DataCollector:
                 'profit_margin': safe_get('profitMargins', None, 'float'),
                 'current_price': current_price,
                 'target_price': safe_get('targetMeanPrice', None, 'float'),
-                'recommendation': safe_get('recommendationMean', None, 'float')
+                'recommendation': safe_get('recommendationMean', None, 'float'),
+                'data_source': 'yahoo_finance',
+                'last_updated': datetime.now().isoformat()
             }
+            
+            # 緩存成功獲取的數據
+            cache_manager.set('stock_info', symbol, stock_info)
+            print(f"💾 Cached stock info for {symbol}")
+            return stock_info
         except Exception as e:
             print(f"Error fetching stock info for {symbol}: {e}")
             # 返回基本信息而不是空字典
@@ -151,10 +168,29 @@ class DataCollector:
             }
     
     def get_stock_prices(self, symbol: str, period: str = "1y") -> List[Dict]:
-        """獲取股價歷史數據"""
+        """獲取股價歷史數據（帶緩存）"""
+        # 檢查緩存
+        cache_key = f"{symbol}_{period}"
+        cached_data = cache_manager.get('price_data', cache_key)
+        if cached_data:
+            print(f"📦 Using cached price data for {symbol} ({period})")
+            return cached_data
+        
         try:
-            ticker = yf.Ticker(symbol)
+            print(f"🌐 Fetching fresh price data for {symbol} ({period})...")
+            ticker = self.safe_yfinance_request(symbol)
+            if not ticker:
+                print(f"Failed to get ticker for {symbol}")
+                return []
+            
+            # 添加延遲避免請求過快
+            time.sleep(self.request_delay)
+            
             hist = ticker.history(period=period)
+            
+            if hist.empty:
+                print(f"No price data found for {symbol}")
+                return []
             
             price_data = []
             for date, row in hist.iterrows():
@@ -168,7 +204,11 @@ class DataCollector:
                     'adj_close': float(row['Close'])  # Yahoo Finance已調整
                 })
             
+            # 緩存價格數據
+            cache_manager.set('price_data', cache_key, price_data)
+            print(f"💾 Cached {len(price_data)} price records for {symbol}")
             return price_data
+            
         except Exception as e:
             print(f"Error fetching price data for {symbol}: {e}")
             return []
@@ -205,6 +245,12 @@ class DataCollector:
     
     def get_economic_indicators(self) -> Dict:
         """獲取宏觀經濟指標（港股相關）"""
+        # 檢查緩存
+        cached_data = cache_manager.get('economic_indicators', 'hk_market')
+        if cached_data:
+            print("📦 Using cached economic indicators data")
+            return cached_data
+        
         indicators = {}
         
         try:
@@ -272,6 +318,9 @@ class DataCollector:
                 '港股通資金': {'value': '淨流入 15億', 'date': datetime.now().strftime('%Y-%m-%d')}
             }
         
+        # 緩存數據
+        cache_manager.set('economic_indicators', 'hk_market', indicators)
+        print("💾 Cached economic indicators data")
         return indicators
     
     def get_market_news(self, symbol: str, limit: int = 5) -> List[Dict]:
@@ -297,6 +346,12 @@ class DataCollector:
     
     def get_sector_performance(self) -> Dict:
         """獲取港股行業表現數據"""
+        # 檢查緩存
+        cached_data = cache_manager.get('sector_performance', 'hk_sectors')
+        if cached_data:
+            print("📦 Using cached sector performance data")
+            return cached_data
+        
         try:
             # 港股主要行業代表股票
             hk_sectors = {
@@ -350,6 +405,9 @@ class DataCollector:
                     '電信股': {'symbol': '3隻股票', 'current_price': 0, 'change_percent': 0.1}
                 }
             
+            # 緩存數據
+            cache_manager.set('sector_performance', 'hk_sectors', sector_data)
+            print("💾 Cached sector performance data")
             return sector_data
         except Exception as e:
             print(f"Error fetching sector performance: {e}")
