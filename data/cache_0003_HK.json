@@ -1,0 +1,22 @@
+{
+  "data": {
+    "symbol": "0003.HK",
+    "name": "香港中華煤氣有限公司",
+    "sector": "公用事業",
+    "industry": "燃氣",
+    "market_cap": 400000000000,
+    "pe_ratio": 18.0,
+    "price_to_book": 2.1,
+    "debt_to_equity": null,
+    "roe": 0.11,
+    "profit_margin": 0.25,
+    "current_price": 8.5,
+    "currentPrice": 8.5,
+    "regularMarketPrice": 8.5,
+    "longName": "香港中華煤氣有限公司",
+    "shortName": "香港中華煤氣有限公司",
+    "data_source": "fallback",
+    "description": "香港主要的燃氣供應商"
+  },
+  "timestamp": "2025-08-15T14:26:20.424985"
+}

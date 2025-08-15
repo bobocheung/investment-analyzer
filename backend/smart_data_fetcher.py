@@ -241,6 +241,14 @@ class SmartDataFetcher:
                     info['longName'] = chinese_names[symbol]
                     info['shortName'] = chinese_names[symbol]
                 
+                # 確保有基本的價格信息
+                if not info.get('currentPrice') and not info.get('regularMarketPrice'):
+                    # 如果沒有價格，使用回退數據
+                    fallback_data = self._get_fallback_data(symbol)
+                    info['currentPrice'] = fallback_data['current_price']
+                    info['regularMarketPrice'] = fallback_data['current_price']
+                
+                print(f"✅ Yahoo Finance data for {symbol}: {info.get('longName', info.get('shortName', symbol))} at ${info.get('currentPrice', 'No price')}")
                 return True, info
             
             return False, {}

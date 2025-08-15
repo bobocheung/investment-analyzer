@@ -35,9 +35,21 @@ def get_stock_data(symbol):
             print(f"📦 Using cached analysis for {symbol}")
             return jsonify(cached_data)
         
-        # 收集數據（嘗試多源）
+        # 強制使用智能數據獲取器
         try:
-            stock_info = collector.get_stock_info_async(symbol)
+            print(f"🔍 Fetching data for {symbol} using smart fetcher...")
+            from smart_data_fetcher import smart_fetcher
+            
+            # 直接使用智能數據獲取器
+            success, raw_data = smart_fetcher.fetch_stock_data(symbol)
+            if success:
+                # 轉換數據格式
+                stock_info = collector._convert_smart_fetcher_data(symbol, raw_data)
+                print(f"✅ Smart fetcher success for {symbol}: {stock_info.get('name', 'Unknown')}")
+            else:
+                print(f"❌ Smart fetcher failed for {symbol}, using fallback")
+                stock_info = collector.get_stock_info_async(symbol)
+            
             # 獲取價格數據
             price_data = collector.get_stock_prices(symbol, "5d")
             
@@ -49,7 +61,7 @@ def get_stock_data(symbol):
                 'financial_data': {}
             }
         except Exception as multi_error:
-            print(f"Multi-source collection failed for {symbol}: {multi_error}, falling back to sync")
+            print(f"Smart fetcher failed for {symbol}: {multi_error}, falling back to sync")
             data = collector.collect_all_data(symbol)
         
         # 分析數據
@@ -75,8 +87,31 @@ def generate_report(symbol):
             print(f"📦 Using cached report for {symbol}")
             return cached_report
         
-        # 獲取數據
-        data = collector.collect_all_data(symbol)
+        # 強制使用智能數據獲取器獲取數據
+        try:
+            print(f"🔍 Fetching data for report {symbol} using smart fetcher...")
+            from smart_data_fetcher import smart_fetcher
+            
+            # 直接使用智能數據獲取器
+            success, raw_data = smart_fetcher.fetch_stock_data(symbol)
+            if success:
+                # 轉換數據格式
+                stock_info = collector._convert_smart_fetcher_data(symbol, raw_data)
+                print(f"✅ Smart fetcher success for report {symbol}: {stock_info.get('name', 'Unknown')}")
+                
+                # 構建數據結構
+                data = {
+                    'symbol': symbol,
+                    'stock_info': stock_info,
+                    'price_data': [],
+                    'financial_data': {}
+                }
+            else:
+                print(f"❌ Smart fetcher failed for report {symbol}, using fallback")
+                data = collector.collect_all_data(symbol)
+        except Exception as e:
+            print(f"Smart fetcher failed for report {symbol}: {e}, using fallback")
+            data = collector.collect_all_data(symbol)
         
         # 生成報告
         report_html = report_generator.generate_simple_html_report(data)
@@ -315,17 +350,29 @@ def toggle_data_source(source_name):
 @app.route('/manifest.json')
 def manifest():
     """返回PWA manifest文件"""
-    return send_from_directory('frontend', 'manifest.json')
+    try:
+        return send_from_directory('../frontend', 'manifest.json')
+    except Exception as e:
+        print(f"Error serving manifest.json: {e}")
+        return jsonify({'error': 'Manifest not found'}), 404
 
 @app.route('/icon.svg')
 def icon():
     """返回應用圖標"""
-    return send_from_directory('frontend', 'icon.svg')
+    try:
+        return send_from_directory('../frontend', 'icon.svg')
+    except Exception as e:
+        print(f"Error serving icon.svg: {e}")
+        return jsonify({'error': 'Icon not found'}), 404
 
 @app.route('/sw.js')
 def service_worker():
     """返回Service Worker文件"""
-    return send_from_directory('frontend', 'sw.js')
+    try:
+        return send_from_directory('../frontend', 'sw.js')
+    except Exception as e:
+        print(f"Error serving sw.js: {e}")
+        return jsonify({'error': 'Service Worker not found'}), 404
 
 if __name__ == '__main__':
     # 設置端口
