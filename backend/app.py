@@ -4,16 +4,16 @@ import os
 from datetime import datetime
 import json
 from data_collector import DataCollector
-from analyzer import StockAnalyzer
+from analyzer import InvestmentAnalyzer
 from simple_report_generator import SimpleReportGenerator
 from cache_manager import cache_manager
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app)
 
 # 初始化組件
 collector = DataCollector()
-analyzer = StockAnalyzer()
+analyzer = InvestmentAnalyzer()
 report_generator = SimpleReportGenerator()
 
 # 設置環境變量
@@ -21,7 +21,7 @@ app.config['FLASK_ENV'] = os.getenv('FLASK_ENV', 'development')
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return app.send_static_file('index.html')
 
 @app.route('/api/stock/<symbol>')
 def get_stock_data(symbol):
@@ -37,7 +37,7 @@ def get_stock_data(symbol):
         data = collector.collect_all_data(symbol)
         
         # 分析數據
-        analysis_result = analyzer.analyze_stock(symbol, data)
+        analysis_result = analyzer.analyze_stock(data)
         
         # 緩存分析結果
         cache_manager.set('analysis_result', symbol, analysis_result)
@@ -63,7 +63,7 @@ def generate_report(symbol):
         data = collector.collect_all_data(symbol)
         
         # 生成報告
-        report_html = report_generator.generate_report(symbol, data)
+        report_html = report_generator.generate_simple_html_report(data)
         
         # 緩存報告
         cache_manager.set('analysis_result', f"{symbol}_report", report_html)

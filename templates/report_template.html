@@ -170,7 +170,7 @@
             <div class="card risk">
                 <h3>風險等級</h3>
                 <div class="value">{{ risk_level }}</div>
-                <div>波動率: {{ "%.1f%"|format(volatility * 100) if volatility else "計算中" }}</div>
+                <div>波動率: {{ "%.1f"|format(volatility * 100) if volatility else "計算中" }}%</div>
             </div>
         </div>
 
@@ -189,7 +189,7 @@
                     </div>
                     <div class="metric">
                         <span class="metric-label">上漲空間</span>
-                        <span class="metric-value">{{ "%.1f%"|format(upside_potential) if upside_potential else "計算中" }}</span>
+                        <span class="metric-value">{{ "%.1f"|format(upside_potential) if upside_potential else "計算中" }}%</span>
                     </div>
                 </div>
                 
@@ -236,11 +236,11 @@
                     <h4>盈利能力</h4>
                     <div class="metric">
                         <span class="metric-label">ROE</span>
-                        <span class="metric-value">{{ "%.1f%"|format(fundamental_analysis.roe_analysis.ratio * 100) }}</span>
+                        <span class="metric-value">{{ "%.1f"|format(fundamental_analysis.roe_analysis.ratio * 100) }}%</span>
                     </div>
                     <div class="metric">
                         <span class="metric-label">利潤率</span>
-                        <span class="metric-value">{{ "%.1f%"|format(fundamental_analysis.margin_analysis.ratio * 100) if fundamental_analysis.margin_analysis else "數據不可用" }}</span>
+                        <span class="metric-value">{{ "%.1f"|format(fundamental_analysis.margin_analysis.ratio * 100) if fundamental_analysis.margin_analysis else "數據不可用" }}%</span>
                     </div>
                 </div>
                 {% endif %}
@@ -295,15 +295,15 @@
                     <h4>風險指標</h4>
                     <div class="metric">
                         <span class="metric-label">年化波動率</span>
-                        <span class="metric-value">{{ "%.1f%"|format(risk_metrics.volatility * 100) if risk_metrics.volatility else "計算中" }}</span>
+                        <span class="metric-value">{{ "%.1f"|format(risk_metrics.volatility * 100) if risk_metrics.volatility else "計算中" }}%</span>
                     </div>
                     <div class="metric">
                         <span class="metric-label">最大回撤</span>
-                        <span class="metric-value">{{ "%.1f%"|format(risk_metrics.max_drawdown * 100) if risk_metrics.max_drawdown else "計算中" }}</span>
+                        <span class="metric-value">{{ "%.1f"|format(risk_metrics.max_drawdown * 100) if risk_metrics.max_drawdown else "計算中" }}%</span>
                     </div>
                     <div class="metric">
                         <span class="metric-label">VaR (95%)</span>
-                        <span class="metric-value">{{ "%.1f%"|format(risk_metrics.var_95 * 100) if risk_metrics.var_95 else "計算中" }}</span>
+                        <span class="metric-value">{{ "%.1f"|format(risk_metrics.var_95 * 100) if risk_metrics.var_95 else "計算中" }}%</span>
                     </div>
                 </div>
                 
