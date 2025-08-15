@@ -224,6 +224,23 @@ class SmartDataFetcher:
                     info['regularMarketPrice'] = float(latest['Close'])
                     info['previousClose'] = float(latest['Open'])
                 
+                # 嘗試使用中文名稱
+                chinese_names = {
+                    '0700.HK': '騰訊控股有限公司',
+                    '0005.HK': '匯豐控股有限公司',
+                    '0941.HK': '中國移動有限公司',
+                    '1398.HK': '中國工商銀行股份有限公司',
+                    '3988.HK': '中國銀行股份有限公司',
+                    '0003.HK': '香港中華煤氣有限公司',
+                    '0100.HK': '白馬戶外媒體有限公司',
+                    '9988.HK': '阿里巴巴集團控股有限公司',
+                    '1024.HK': '快手科技有限公司'
+                }
+                
+                if symbol in chinese_names:
+                    info['longName'] = chinese_names[symbol]
+                    info['shortName'] = chinese_names[symbol]
+                
                 return True, info
             
             return False, {}
@@ -282,8 +299,39 @@ class SmartDataFetcher:
     
     def _get_fallback_data(self, symbol: str) -> Dict:
         """獲取真實的回退數據"""
+        # 港股公司中文名稱映射
+        chinese_names = {
+            '0700.HK': '騰訊控股有限公司',
+            '0005.HK': '匯豐控股有限公司',
+            '0941.HK': '中國移動有限公司',
+            '1398.HK': '中國工商銀行股份有限公司',
+            '3988.HK': '中國銀行股份有限公司',
+            '0003.HK': '香港中華煤氣有限公司',
+            '0100.HK': '白馬戶外媒體有限公司',
+            '9988.HK': '阿里巴巴集團控股有限公司',
+            '1024.HK': '快手科技有限公司',
+            '2628.HK': '中國人壽保險股份有限公司',
+            '1299.HK': '友邦保險控股有限公司',
+            '0857.HK': '中國石油天然氣股份有限公司',
+            '0883.HK': '中國海洋石油有限公司',
+            '1109.HK': '華潤置地有限公司',
+            '0016.HK': '新鴻基地產發展有限公司',
+            '1997.HK': '九龍倉集團有限公司',
+            '0762.HK': '中國聯通(香港)股份有限公司',
+            '0728.HK': '中國電信股份有限公司',
+            '0941.HK': '中國移動有限公司',
+            '1211.HK': '比亞迪股份有限公司',
+            '2269.HK': '藥明生物技術有限公司',
+            '2238.HK': '廣汽集團股份有限公司',
+            '0175.HK': '吉利汽車控股有限公司',
+            '6160.HK': '京東集團股份有限公司',
+            '6862.HK': '海爾智家股份有限公司',
+            '1177.HK': '中國生物製藥有限公司',
+            '0288.HK': '萬洲國際有限公司'
+        }
+        
         stock_data = self.real_stock_data.get(symbol, {
-            'name': symbol.replace('.HK', ''),
+            'name': chinese_names.get(symbol, symbol.replace('.HK', '')),
             'sector': '未分類',
             'industry': '未分類',
             'current_price': 10.0,

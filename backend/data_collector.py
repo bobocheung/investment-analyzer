@@ -37,7 +37,9 @@ class DataCollector:
             from smart_data_fetcher import smart_fetcher
             success, data = smart_fetcher.fetch_stock_data(symbol)
             if success:
-                return data
+                # 轉換數據格式以匹配預期結構
+                converted_data = self._convert_smart_fetcher_data(symbol, data)
+                return converted_data
         except ImportError:
             print("Smart fetcher not available, using fallback")
         except Exception as e:
@@ -47,6 +49,48 @@ class DataCollector:
         if self.use_multi_source and self.multi_source:
             return self.multi_source.get_stock_info_multi_source(symbol)
         else:
+            return self.get_stock_info(symbol)
+    
+    def _convert_smart_fetcher_data(self, symbol: str, data: Dict) -> Dict:
+        """轉換智能獲取器的數據格式"""
+        try:
+            # 從多個可能的字段獲取公司名稱
+            company_name = (data.get('longName') or 
+                          data.get('shortName') or 
+                          data.get('name') or 
+                          symbol)
+            
+            # 從多個可能的字段獲取當前價格
+            current_price = (data.get('currentPrice') or 
+                           data.get('regularMarketPrice') or 
+                           data.get('previousClose') or 
+                           0)
+            
+            # 構建標準化的股票信息
+            stock_info = {
+                'symbol': symbol,
+                'name': company_name,
+                'sector': data.get('sector', '未分類'),
+                'industry': data.get('industry', '未分類'),
+                'market_cap': data.get('marketCap', 0),
+                'pe_ratio': data.get('trailingPE'),
+                'forward_pe': data.get('forwardPE'),
+                'price_to_book': data.get('priceToBook'),
+                'debt_to_equity': data.get('debtToEquity'),
+                'roe': data.get('returnOnEquity'),
+                'profit_margin': data.get('profitMargins'),
+                'current_price': current_price,
+                'target_price': data.get('targetMeanPrice'),
+                'recommendation': data.get('recommendationMean'),
+                'data_source': 'smart_fetcher',
+                'last_updated': datetime.now().isoformat()
+            }
+            
+            print(f"✅ Converted smart fetcher data for {symbol}: {company_name} at ${current_price}")
+            return stock_info
+            
+        except Exception as e:
+            print(f"Error converting smart fetcher data: {e}")
             return self.get_stock_info(symbol)
     
     def safe_yfinance_request(self, symbol, max_retries=3, delay=1.0):
