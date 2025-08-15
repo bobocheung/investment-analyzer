@@ -468,25 +468,44 @@ class InvestmentAnalyzer:
                 recommendation = "強烈賣出"
                 confidence = "高"
             
-            # 目標價格估算 (簡化模型)
+            # 目標價格估算 (改進模型)
             current_price = stock_info.get('current_price') or stock_info.get('currentPrice') or stock_info.get('regularMarketPrice')
+            
+            # 如果沒有價格數據，使用回退數據
             if not current_price or current_price <= 0:
-                # 使用回退數據中的價格
-                current_price = stock_info.get('current_price', 100)
+                # 嘗試從多個來源獲取價格
+                current_price = (stock_info.get('current_price') or 
+                               stock_info.get('currentPrice') or 
+                               stock_info.get('regularMarketPrice') or 
+                               stock_info.get('previousClose') or 
+                               100.0)
+                print(f"Using fallback price: {current_price}")
             
-            if current_price > 0:
-                if overall_score >= 70:
-                    target_price = current_price * 1.15  # 15%上漲空間
-                elif overall_score >= 50:
-                    target_price = current_price * 1.05  # 5%上漲空間
-                elif overall_score >= 30:
-                    target_price = current_price * 0.95  # 5%下跌空間
-                else:
-                    target_price = current_price * 0.85  # 15%下跌空間
+            # 確保價格有效
+            if current_price <= 0:
+                current_price = 100.0
+                print(f"Invalid price, using default: {current_price}")
+            
+            # 基於評分計算目標價格
+            if overall_score >= 75:
+                target_price = current_price * 1.20  # 20%上漲空間
+            elif overall_score >= 65:
+                target_price = current_price * 1.15  # 15%上漲空間
+            elif overall_score >= 55:
+                target_price = current_price * 1.10  # 10%上漲空間
+            elif overall_score >= 45:
+                target_price = current_price * 1.05  # 5%上漲空間
+            elif overall_score >= 35:
+                target_price = current_price * 1.00  # 持平
+            elif overall_score >= 25:
+                target_price = current_price * 0.95  # 5%下跌空間
             else:
-                target_price = current_price * 1.05  # 默認5%上漲空間
+                target_price = current_price * 0.90  # 10%下跌空間
             
+            # 計算上漲空間
             upside_potential = ((target_price - current_price) / current_price * 100) if current_price > 0 else 0
+            
+            print(f"Price calculation: Current=${current_price:.2f}, Target=${target_price:.2f}, Upside={upside_potential:.1f}%")
             
             print(f"Recommendation: {recommendation}, Score: {overall_score:.2f}, Target: {target_price:.2f}")
             

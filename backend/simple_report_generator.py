@@ -54,9 +54,25 @@ class SimpleReportGenerator:
                 recommendation.get('current_price') or 
                 stock_info.get('current_price') or 
                 stock_info.get('currentPrice') or 
-                stock_info.get('regularMarketPrice')
+                stock_info.get('regularMarketPrice') or
+                0
             )
-            target_price = safe_format(recommendation.get('target_price'))
+            
+            # 確保目標價格有值
+            target_price_val = recommendation.get('target_price')
+            if target_price_val and target_price_val > 0:
+                target_price = safe_format(target_price_val)
+            else:
+                # 如果沒有目標價格，基於當前價格計算
+                current_price_val = (recommendation.get('current_price') or 
+                                   stock_info.get('current_price') or 
+                                   stock_info.get('currentPrice') or 
+                                   stock_info.get('regularMarketPrice') or
+                                   100.0)
+                if current_price_val > 0:
+                    target_price = safe_format(current_price_val * 1.10)  # 10%上漲空間
+                else:
+                    target_price = "計算中"
             
             # 確保評分不為0
             overall_score_val = recommendation.get('overall_score', 0)
@@ -66,7 +82,17 @@ class SimpleReportGenerator:
             overall_score = safe_format(overall_score_val if overall_score_val > 0 else 50, "%.1f")
             fundamental_score = safe_format(fundamental_score_val if fundamental_score_val > 0 else 50, "%.1f")
             technical_score = safe_format(technical_score_val if technical_score_val > 0 else 50, "%.1f")
-            upside_potential = safe_format(recommendation.get('upside_potential', 0), "%.1f")
+            
+            # 確保上漲空間有值
+            upside_potential_val = recommendation.get('upside_potential')
+            if upside_potential_val is not None:
+                upside_potential = safe_format(upside_potential_val, "%.1f")
+            else:
+                # 如果沒有上漲空間，基於目標價格計算
+                if target_price_val and current_price_val:
+                    upside_potential = safe_format(((target_price_val - current_price_val) / current_price_val * 100), "%.1f")
+                else:
+                    upside_potential = "計算中"
             
             # 生成HTML
             html_content = f"""
