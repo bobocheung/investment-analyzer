@@ -35,7 +35,17 @@ def get_stock_data(symbol):
         
         # 收集數據（嘗試多源）
         try:
-            data = collector.get_stock_info_async(symbol)
+            stock_info = collector.get_stock_info_async(symbol)
+            # 獲取價格數據
+            price_data = collector.get_stock_prices(symbol, "5d")
+            
+            # 構建完整的數據結構
+            data = {
+                'symbol': symbol,
+                'stock_info': stock_info,
+                'price_data': price_data,
+                'financial_data': {}
+            }
         except Exception as multi_error:
             print(f"Multi-source collection failed for {symbol}: {multi_error}, falling back to sync")
             data = collector.collect_all_data(symbol)

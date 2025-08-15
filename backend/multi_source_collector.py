@@ -187,19 +187,33 @@ class MultiSourceDataCollector:
                                 info.get('name')
                             ])
                             
-                            # 如果沒有價格數據，嘗試從歷史數據獲取
-                            if not has_price:
-                                try:
-                                    hist = ticker.history(period="1d")
-                                    if not hist.empty:
-                                        latest = hist.iloc[-1]
-                                        info['currentPrice'] = float(latest['Close'])
-                                        info['regularMarketPrice'] = float(latest['Close'])
-                                        info['previousClose'] = float(latest['Open'])
-                                        has_price = True
-                                        print(f"📊 Got price from history: ${info['currentPrice']}")
-                                except Exception as e:
-                                    print(f"Failed to get history: {e}")
+                                                    # 如果沒有價格數據，嘗試從歷史數據獲取
+                        if not has_price:
+                            try:
+                                hist = ticker.history(period="1d")
+                                if not hist.empty:
+                                    latest = hist.iloc[-1]
+                                    info['currentPrice'] = float(latest['Close'])
+                                    info['regularMarketPrice'] = float(latest['Close'])
+                                    info['previousClose'] = float(latest['Open'])
+                                    info['open'] = float(latest['Open'])
+                                    info['high'] = float(latest['High'])
+                                    info['low'] = float(latest['Low'])
+                                    info['volume'] = int(latest['Volume'])
+                                    has_price = True
+                                    print(f"📊 Got price from history: ${info['currentPrice']}")
+                            except Exception as e:
+                                print(f"Failed to get history: {e}")
+                        
+                        # 如果還是沒有價格，嘗試從其他字段獲取
+                        if not has_price:
+                            for price_field in ['close', 'lastPrice', 'price', 'current_price']:
+                                if info.get(price_field):
+                                    info['currentPrice'] = float(info[price_field])
+                                    info['regularMarketPrice'] = float(info[price_field])
+                                    has_price = True
+                                    print(f"📊 Got price from {price_field}: ${info['currentPrice']}")
+                                    break
                             
                             if has_price or has_name:
                                 print(f"✅ Yahoo Finance success for {variant}")

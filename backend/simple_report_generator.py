@@ -14,6 +14,14 @@ class SimpleReportGenerator:
             stock_info = analysis_data.get('stock_info', {})
             recommendation = analysis_data.get('recommendation', {})
             
+            # 如果recommendation是空的，嘗試從analysis_data中獲取
+            if not recommendation:
+                recommendation = analysis_data.get('recommendation', {})
+            
+            print(f"Generating report for {symbol}")
+            print(f"Stock info keys: {list(stock_info.keys())}")
+            print(f"Recommendation keys: {list(recommendation.keys())}")
+            
             # 安全地獲取數值
             def safe_format(value, format_str="%.2f", default="數據不可用"):
                 try:
