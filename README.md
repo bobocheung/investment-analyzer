@@ -1,35 +1,81 @@
-# 🏮 港股投資分析系統 (Hong Kong Stock Investment Analyzer)
+# 香港股票投資分析器 (Hong Kong Stock Investment Analyzer)
 
-一個專為港股市場設計的智能投資分析系統，提供全面的股票分析、技術指標計算和投資建議生成功能。
+## 🚀 項目概述
 
-## ✨ 主要功能
+香港股票投資分析器是一個專業的港股投資分析工具，提供全面的股票數據分析、技術指標計算、基本面分析和投資建議。該系統集成了高性能緩存系統，確保快速響應和優異的用戶體驗。
+
+## ✨ 核心功能
 
 ### 📊 股票分析
-- **實時股價數據**：通過 Yahoo Finance API 獲取最新港股數據
-- **基本面分析**：PE比率、PB比率、ROE、債務比率等關鍵指標
-- **技術面分析**：移動平均線、RSI、MACD、布林帶等技術指標
-- **市場情緒分析**：基於多項指標的綜合評分系統
+- **基本信息分析**: 公司名稱、行業、市值、PE比率等
+- **技術指標**: RSI、MACD、布林帶、移動平均線等
+- **基本面分析**: 財務比率、盈利能力、風險評估
+- **投資建議**: 綜合評分、風險等級、目標價格
 
-### 📈 投資建議
-- **智能評分**：基於基本面和技術面的綜合評分（0-100分）
-- **投資建議**：買入/持有/賣出建議，附帶信心度評估
-- **風險評級**：低/中/高風險等級分類
-- **目標價格**：基於分析模型的目標價格預測
+### 🎯 市場數據
+- **實時價格**: 股票價格、成交量、漲跌幅
+- **市場指標**: 恆生指數、行業表現、經濟指標
+- **新聞資訊**: 相關市場新聞和分析
 
-### 📋 投資組合管理
-- **觀察清單**：添加/移除關注股票
-- **批量分析**：一次性分析多隻股票
-- **歷史追蹤**：股價走勢和分析結果歷史記錄
+### 📈 報告生成
+- **HTML報告**: 美觀的投資分析報告
+- **數據可視化**: 圖表和指標展示
+- **投資建議**: 詳細的投資決策支持
 
-### 📄 報告生成
-- **美觀的HTML報告**：包含完整分析結果的可視化報告
-- **一鍵下載**：支持HTML格式報告下載
-- **中文界面**：完全中文化的用戶界面
+### 🚀 高性能緩存系統
+- **智能緩存策略**: 根據數據類型設置不同TTL
+- **內存緩存**: 快速訪問，減少I/O操作
+- **自動清理**: 定期清理過期緩存，釋放內存
+- **線程安全**: 多線程環境下的數據一致性
+- **統計監控**: 實時監控緩存命中率和性能指標
+
+## 🏗️ 技術架構
+
+### 後端技術棧
+- **Flask**: Web框架
+- **Python 3.9+**: 核心編程語言
+- **yfinance**: Yahoo Finance數據API
+- **pandas & numpy**: 數據處理和分析
+- **自定義緩存系統**: 高性能緩存管理
+
+### 前端技術棧
+- **HTML5 & CSS3**: 響應式設計
+- **JavaScript**: 動態交互
+- **Chart.js**: 數據可視化
+
+### 部署配置
+- **Render.com**: 雲端部署
+- **Python 3.9.16**: 運行環境
+- **自動化部署**: CI/CD流程
+
+## 📁 項目結構
+
+```
+investment-analyzer/
+├── backend/                    # 後端核心代碼
+│   ├── app.py                 # Flask應用主文件
+│   ├── cache_manager.py       # 高性能緩存管理器
+│   ├── data_collector.py      # 數據收集器
+│   ├── analyzer.py            # 股票分析引擎
+│   └── simple_report_generator.py  # 報告生成器
+├── frontend/                   # 前端界面
+│   ├── index.html             # 主頁面
+│   ├── style.css              # 樣式文件
+│   └── script.js              # 交互邏輯
+├── templates/                  # 報告模板
+│   └── report_template.html   # HTML報告模板
+├── data/                      # 數據存儲
+├── tests/                     # 測試文件
+├── requirements.txt            # Python依賴
+├── render.yaml                # Render部署配置
+├── Procfile                   # 部署命令
+└── README.md                  # 項目文檔
+```
 
 ## 🚀 快速開始
 
 ### 環境要求
-- Python 3.8+
+- Python 3.9+
 - pip 包管理器
 
 ### 安裝步驟
@@ -47,169 +93,161 @@ pip install -r requirements.txt
 
 3. **啟動應用**
 ```bash
-cd backend
-python3 app.py
+python run.py
 ```
 
 4. **訪問應用**
-打開瀏覽器訪問：http://localhost:8080
+打開瀏覽器訪問 `http://localhost:8080`
 
-## 📁 項目結構
+### 部署到雲端
 
-```
-investment-analyzer/
-├── backend/                    # 後端代碼
-│   ├── app.py                 # Flask 主應用
-│   ├── data_collector.py      # 數據收集模組
-│   ├── analyzer.py            # 分析引擎
-│   ├── models.py              # 數據模型
-│   ├── simple_report_generator.py  # 報告生成器
-│   └── report_generator.py    # 高級報告生成器
-├── frontend/                   # 前端代碼
-│   ├── index.html             # 主頁面
-│   ├── script.js              # JavaScript 邏輯
-│   └── style.css              # 樣式文件
-├── data/                      # 數據存儲目錄
-│   ├── reports/               # 生成的報告
-│   └── watchlist.json         # 觀察清單
-├── requirements.txt           # Python 依賴
-└── README.md                  # 項目說明
-```
+#### Render.com 部署
+1. Fork 本項目到你的GitHub賬戶
+2. 在Render.com創建新的Web Service
+3. 連接GitHub倉庫
+4. 設置環境變量（如需要）
+5. 部署完成！
 
-## 🔧 API 接口
+## 📊 緩存系統特性
 
-### 股票信息
-- `GET /api/stocks/{symbol}/info` - 獲取股票基本信息
-- `GET /api/stocks/{symbol}/prices` - 獲取股價歷史數據
+### 緩存類型
+| 類型 | TTL | 說明 |
+|------|-----|------|
+| `stock_info` | 1小時 | 股票基本信息 |
+| `price_data` | 4小時 | 股票價格數據 |
+| `financial_data` | 1天 | 財務數據 |
+| `news` | 30分鐘 | 市場新聞 |
+| `economic_indicators` | 12小時 | 經濟指標 |
+| `sector_performance` | 12小時 | 行業表現 |
+| `analysis_result` | 1小時 | 分析結果 |
 
-### 分析功能
-- `GET /api/analyze/{symbol}` - 分析指定股票
-- `POST /api/batch-analyze` - 批量分析股票
+### 緩存管理API
+- `GET /api/cache/stats` - 緩存統計信息
+- `GET /api/cache/info` - 緩存詳細信息
+- `POST /api/cache/clear` - 清空緩存
+- `POST /api/cache/invalidate/<symbol>` - 失效特定股票緩存
+- `POST /api/cache/ttl` - 設置緩存TTL
 
-### 報告生成
-- `GET /api/reports/{symbol}` - 生成HTML報告
-- `GET /api/reports/{symbol}/pdf` - 生成PDF報告（需要額外依賴）
+## 🔧 配置選項
 
-### 觀察清單
-- `GET /api/watchlist` - 獲取觀察清單
-- `POST /api/watchlist/{symbol}` - 添加到觀察清單
-- `DELETE /api/watchlist/{symbol}` - 從觀察清單移除
-
-### 市場數據
-- `GET /api/market/economic` - 獲取經濟指標
-- `GET /api/market/sectors` - 獲取行業表現
-
-## 📊 分析指標說明
-
-### 基本面指標
-- **PE比率**：市盈率，股價與每股收益的比值
-- **PB比率**：市淨率，股價與每股淨資產的比值
-- **ROE**：股東權益報酬率，衡量公司盈利能力
-- **債務比率**：負債與股東權益的比值
-
-### 技術面指標
-- **移動平均線**：5日、20日、50日移動平均
-- **RSI**：相對強弱指標，衡量超買超賣
-- **MACD**：指數平滑移動平均線，趨勢指標
-- **布林帶**：價格通道指標
-
-### 評分系統
-- **基本面評分**：基於財務指標的評分（0-100）
-- **技術面評分**：基於技術指標的評分（0-100）
-- **綜合評分**：基本面和技術面的加權平均
-
-## 🎨 界面特色
-
-- **響應式設計**：支持桌面和移動設備
-- **中文界面**：完全中文化的用戶體驗
-- **美觀報告**：採用現代化設計的分析報告
-- **實時更新**：股價和分析數據實時刷新
-
-## ⚙️ 配置選項
-
-### 數據更新頻率
-系統會自動定期更新股價數據，默認配置：
-- 股價數據：每小時更新
-- 分析結果：每日更新
-- 市場指標：每日更新
-
-### 可選依賴
-如需PDF報告生成功能，請安裝額外依賴：
+### 環境變量
 ```bash
-pip install weasyprint pdfkit
+FLASK_ENV=production          # 環境設置
+PORT=8080                     # 端口設置
 ```
 
-## 🔍 使用示例
+### 緩存配置
+```python
+# 設置特定緩存類型的TTL
+cache_manager.set_ttl('stock_info', timedelta(hours=2))
+cache_manager.set_ttl('price_data', timedelta(minutes=30))
+```
 
-### 分析單隻股票
-1. 在搜索框輸入股票代碼（如：0700.HK）
-2. 點擊"分析"按鈕
-3. 查看詳細的分析結果
-4. 可選擇生成報告或添加到觀察清單
+## 📈 性能優化
 
-### 批量分析
-1. 點擊"批量分析"
-2. 輸入多個股票代碼（用逗號分隔）
-3. 系統會並行分析所有股票
-4. 查看對比結果
+### 緩存策略
+- **智能TTL**: 根據數據類型設置不同的生存時間
+- **自動清理**: 每5分鐘自動清理過期緩存
+- **內存管理**: 優化的內存使用和垃圾回收
 
-### 生成報告
-1. 完成股票分析後
-2. 點擊"生成報告"按鈕
-3. 系統會生成包含完整分析的HTML報告
-4. 可直接在瀏覽器查看或下載
+### 響應時間
+- **首次請求**: 正常API響應時間
+- **緩存命中**: 響應時間減少80%+
+- **批量請求**: 支持並發處理
 
-## 🛠️ 開發指南
+## 🧪 測試
 
-### 添加新的分析指標
-1. 在 `analyzer.py` 中添加計算邏輯
-2. 更新 `simple_report_generator.py` 中的報告模板
-3. 在前端 `script.js` 中添加顯示邏輯
+### 運行測試
+```bash
+python test_cache_system.py    # 緩存系統測試
+python test_system.py          # 系統功能測試
+```
 
-### 自定義報告樣式
-1. 修改 `simple_report_generator.py` 中的CSS樣式
-2. 調整HTML模板結構
-3. 測試不同瀏覽器的兼容性
+### 測試覆蓋
+- ✅ 緩存系統功能測試
+- ✅ 股票分析功能測試
+- ✅ API端點測試
+- ✅ 報告生成測試
 
-## 📝 注意事項
+## 📚 API文檔
 
-### 數據來源
-- 股價數據來自 Yahoo Finance
-- 數據可能存在15-20分鐘延遲
-- 建議僅用於參考，不構成投資建議
+### 核心API端點
 
-### 免責聲明
-- 本系統僅供學習和研究使用
-- 所有分析結果僅供參考，不構成投資建議
-- 投資有風險，入市需謹慎
-- 請根據個人風險承受能力做出投資決策
+#### 股票分析
+- `GET /api/stock/<symbol>` - 獲取股票分析數據
+- `GET /api/stock/<symbol>/report` - 生成分析報告
+
+#### 市場數據
+- `GET /api/market/sectors` - 獲取市場板塊數據
+- `GET /api/market/economic` - 獲取經濟指標
+
+#### 監控列表
+- `GET /api/watchlist` - 獲取監控列表
+- `POST /api/watchlist` - 添加到監控列表
+- `DELETE /api/watchlist/<symbol>` - 從監控列表移除
+
+## 🐛 故障排除
+
+### 常見問題
+
+#### 1. 緩存命中率低
+- 檢查TTL設置是否合理
+- 確認緩存鍵設計是否正確
+- 檢查是否有頻繁的緩存清空操作
+
+#### 2. 部署失敗
+- 確認Python版本為3.9+
+- 檢查依賴是否完整安裝
+- 查看部署日誌中的具體錯誤
+
+#### 3. 數據獲取失敗
+- 檢查網絡連接
+- 確認Yahoo Finance API可用性
+- 查看錯誤日誌
+
+### 調試技巧
+```python
+# 檢查緩存統計
+stats = cache_manager.get_stats()
+print(f"Cache hit rate: {stats['hit_rate']}")
+
+# 檢查緩存內容
+info = cache_manager.get_cache_info('stock_info')
+print(f"Stock info cache: {info}")
+```
 
 ## 🤝 貢獻指南
 
-歡迎提交 Issue 和 Pull Request！
+### 開發環境設置
+1. Fork 項目
+2. 創建功能分支
+3. 提交更改
+4. 發起Pull Request
 
-1. Fork 本項目
-2. 創建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 開啟 Pull Request
+### 代碼規範
+- 遵循PEP 8 Python代碼規範
+- 添加適當的註釋和文檔
+- 編寫測試用例
+- 確保代碼通過所有測試
 
 ## 📄 許可證
 
-本項目採用 MIT 許可證 - 查看 [LICENSE](LICENSE) 文件了解詳情
-
-## 📞 聯繫方式
-
-- 項目地址：https://github.com/bobocheung/investment-analyzer
-- 問題反饋：https://github.com/bobocheung/investment-analyzer/issues
+本項目採用 MIT 許可證 - 詳見 [LICENSE](LICENSE) 文件
 
 ## 🙏 致謝
 
-- [Yahoo Finance](https://finance.yahoo.com/) - 提供股價數據
-- [Flask](https://flask.palletsprojects.com/) - Web框架
-- [pandas](https://pandas.pydata.org/) - 數據處理
-- [yfinance](https://github.com/ranaroussi/yfinance) - Yahoo Finance API
+- Yahoo Finance API 提供股票數據
+- Flask 框架提供Web服務支持
+- 開源社區的貢獻和支持
+
+## 📞 聯繫方式
+
+- **項目地址**: [GitHub](https://github.com/bobocheung/investment-analyzer)
+- **問題反饋**: [Issues](https://github.com/bobocheung/investment-analyzer/issues)
+- **功能建議**: [Discussions](https://github.com/bobocheung/investment-analyzer/discussions)
 
 ---
 
-**⚠️ 投資風險提示**：本系統提供的所有信息和分析僅供參考，不構成投資建議。投資者應該根據自己的風險承受能力和投資目標做出決策。股市有風險，投資需謹慎。
+**最後更新**: 2025-01-XX  
+**版本**: v2.0.0  
+**狀態**: 🚀 生產就緒

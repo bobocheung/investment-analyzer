@@ -173,7 +173,7 @@ async function analyzeStock() {
     elements.analysisResults.style.display = 'none';
     
     try {
-        const response = await fetch(`${API_BASE}/api/analyze/${symbol}`);
+        const response = await fetch(`${API_BASE}/api/stock/${symbol}`);
         const data = await response.json();
         
         if (response.ok) {
@@ -503,23 +503,24 @@ function createWatchlistCard(symbol) {
 
 async function loadStockInfoForWatchlist(symbol, card) {
     try {
-        const response = await fetch(`${API_BASE}/api/stocks/${symbol}/info`);
+        const response = await fetch(`${API_BASE}/api/stock/${symbol}`);
         const data = await response.json();
         
         if (response.ok) {
+            const stockInfo = data.stock_info || {};
             const infoDiv = card.querySelector('.watchlist-info');
             infoDiv.innerHTML = `
                 <div class="detail-item">
                     <span>當前價格:</span>
-                    <span>$${(data.current_price || 0).toFixed(2)}</span>
+                    <span>$${(stockInfo.current_price || 0).toFixed(2)}</span>
                 </div>
                 <div class="detail-item">
                     <span>PE比率:</span>
-                    <span>${(data.pe_ratio || 0).toFixed(2)}</span>
+                    <span>${(stockInfo.pe_ratio || 0).toFixed(2)}</span>
                 </div>
                 <div class="detail-item">
                     <span>行業:</span>
-                    <span>${data.sector || 'N/A'}</span>
+                    <span>${stockInfo.sector || 'N/A'}</span>
                 </div>
             `;
         }
@@ -537,22 +538,25 @@ async function batchAnalyze() {
     showNotification('開始批量分析...', 'info');
     
     try {
-        const response = await fetch(`${API_BASE}/api/batch-analyze`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ symbols: watchlist })
-        });
+        // 批量分析每個股票
+        const results = [];
+        for (const symbol of watchlist) {
+            try {
+                const response = await fetch(`${API_BASE}/api/stock/${symbol}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    results.push({ symbol, data });
+                }
+            } catch (error) {
+                console.error(`Error analyzing ${symbol}:`, error);
+            }
+        }
         
-        const data = await response.json();
-        
-        if (response.ok) {
-            showNotification('批量分析完成', 'success');
-            // 可以在這裡顯示批量分析結果
-            console.log('Batch analysis results:', data);
+        if (results.length > 0) {
+            showNotification(`批量分析完成，成功分析 ${results.length} 隻股票`, 'success');
+            console.log('Batch analysis results:', results);
         } else {
-            throw new Error(data.error);
+            throw new Error('所有股票分析都失敗了');
         }
     } catch (error) {
         console.error('Batch analysis error:', error);
@@ -673,12 +677,13 @@ async function loadWatchlistPreview() {
 
 async function loadPreviewPrice(symbol, item) {
     try {
-        const response = await fetch(`${API_BASE}/api/stocks/${symbol}/info`);
+        const response = await fetch(`${API_BASE}/api/stock/${symbol}`);
         const data = await response.json();
         
         if (response.ok) {
+            const stockInfo = data.stock_info || {};
             const priceSpan = item.querySelector('span:last-child');
-            priceSpan.textContent = `$${(data.current_price || 0).toFixed(2)}`;
+            priceSpan.textContent = `$${(stockInfo.current_price || 0).toFixed(2)}`;
             priceSpan.className = '';
         }
     } catch (error) {
@@ -698,7 +703,7 @@ async function generateReport() {
     }
     
     const symbol = currentAnalysis.symbol;
-    window.open(`${API_BASE}/api/reports/${symbol}`, '_blank');
+    window.open(`${API_BASE}/api/stock/${symbol}/report`, '_blank');
 }
 
 async function downloadPdf() {
@@ -713,7 +718,7 @@ async function downloadPdf() {
         showNotification('正在生成報告...', 'info');
         
         // 嘗試下載PDF/HTML報告
-        const response = await fetch(`${API_BASE}/api/reports/${symbol}/pdf`);
+        const response = await fetch(`${API_BASE}/api/stock/${symbol}/report`);
         
         if (response.ok) {
             const contentType = response.headers.get('content-type');
@@ -748,7 +753,7 @@ async function downloadPdf() {
         
         // 備用方案：打開HTML報告
         try {
-            window.open(`${API_BASE}/api/reports/${symbol}`, '_blank');
+            window.open(`${API_BASE}/api/stock/${symbol}/report`, '_blank');
             showNotification('已打開HTML版本報告', 'info');
         } catch (fallbackError) {
             console.error('Fallback error:', fallbackError);
@@ -765,7 +770,7 @@ async function generateReportFromPage() {
     }
     
     try {
-        const response = await fetch(`${API_BASE}/api/reports/${symbol}`);
+        const response = await fetch(`${API_BASE}/api/stock/${symbol}/report`);
         
         if (response.ok) {
             const html = await response.text();
