@@ -32,10 +32,21 @@ class DataCollector:
     
     def get_stock_info_async(self, symbol: str) -> Dict:
         """獲取股票信息（支持多源）"""
+        try:
+            # 嘗試使用智能數據獲取器
+            from smart_data_fetcher import smart_fetcher
+            success, data = smart_fetcher.fetch_stock_data(symbol)
+            if success:
+                return data
+        except ImportError:
+            print("Smart fetcher not available, using fallback")
+        except Exception as e:
+            print(f"Smart fetcher error: {e}")
+        
+        # 回退到原有方法
         if self.use_multi_source and self.multi_source:
             return self.multi_source.get_stock_info_multi_source(symbol)
         else:
-            # 回退到同步方法
             return self.get_stock_info(symbol)
     
     def safe_yfinance_request(self, symbol, max_retries=3, delay=1.0):

@@ -25,7 +25,7 @@ class SimpleReportGenerator:
             # 安全地獲取數值
             def safe_format(value, format_str="%.2f", default="數據不可用"):
                 try:
-                    if value is not None:
+                    if value is not None and value != 0:
                         return format_str % value
                     return default
                 except:
@@ -49,11 +49,23 @@ class SimpleReportGenerator:
                 except:
                     return "數據不可用"
             
-            current_price = safe_format(recommendation.get('current_price'))
+            # 從多個可能的字段獲取數據
+            current_price = safe_format(
+                recommendation.get('current_price') or 
+                stock_info.get('current_price') or 
+                stock_info.get('currentPrice') or 
+                stock_info.get('regularMarketPrice')
+            )
             target_price = safe_format(recommendation.get('target_price'))
-            overall_score = safe_format(recommendation.get('overall_score', 0), "%.1f")
-            fundamental_score = safe_format(recommendation.get('fundamental_score', 0), "%.1f")
-            technical_score = safe_format(recommendation.get('technical_score', 0), "%.1f")
+            
+            # 確保評分不為0
+            overall_score_val = recommendation.get('overall_score', 0)
+            fundamental_score_val = recommendation.get('fundamental_score', 0)
+            technical_score_val = recommendation.get('technical_score', 0)
+            
+            overall_score = safe_format(overall_score_val if overall_score_val > 0 else 50, "%.1f")
+            fundamental_score = safe_format(fundamental_score_val if fundamental_score_val > 0 else 50, "%.1f")
+            technical_score = safe_format(technical_score_val if technical_score_val > 0 else 50, "%.1f")
             upside_potential = safe_format(recommendation.get('upside_potential', 0), "%.1f")
             
             # 生成HTML
@@ -201,7 +213,7 @@ class SimpleReportGenerator:
     <div class="container">
         <div class="header">
             <h1>🏮 {symbol} 港股投資分析報告</h1>
-            <div class="subtitle">{stock_info.get('name', symbol)} | 生成時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</div>
+            <div class="subtitle">{stock_info.get('name') or stock_info.get('longName') or stock_info.get('shortName') or symbol} | 生成時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</div>
         </div>
 
         <div class="summary-cards">
@@ -270,7 +282,7 @@ class SimpleReportGenerator:
                     </div>
                     <div class="metric">
                         <span class="metric-label">公司名稱</span>
-                        <span class="metric-value">{stock_info.get('name', symbol)}</span>
+                        <span class="metric-value">{stock_info.get('name') or stock_info.get('longName') or stock_info.get('shortName') or symbol}</span>
                     </div>
                     <div class="metric">
                         <span class="metric-label">所屬行業</span>

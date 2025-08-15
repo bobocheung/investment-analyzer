@@ -3,6 +3,8 @@ from flask_cors import CORS
 import os
 from datetime import datetime
 import json
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 from data_collector import DataCollector
 from analyzer import InvestmentAnalyzer
 from simple_report_generator import SimpleReportGenerator
