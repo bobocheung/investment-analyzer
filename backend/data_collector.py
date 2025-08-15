@@ -510,7 +510,7 @@ class DataCollector:
             }
         
         # 緩存數據（5分鐘）
-        cache_manager.set('economic_indicators', 'hk_market', indicators)
+        cache_manager.set('economic_indicators', 'hk_market', indicators, ttl_seconds=300)
         print("💾 Cached economic indicators data")
         print(f"📊 Final indicators: {list(indicators.keys())}")
         return indicators

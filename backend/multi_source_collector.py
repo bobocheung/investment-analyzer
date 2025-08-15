@@ -26,10 +26,16 @@ class MultiSourceDataCollector:
         self.quandl_key = os.getenv('QUANDL_API_KEY', 'demo')
         
         # 請求限制配置
-        self.request_delay = 0.3  # 基礎請求間隔（減少以提高速度）
-        self.max_retries = 3      # 每個源的最大重試次數（增加以提高成功率）
-        self.max_concurrent = 5   # 最大並發請求數（增加以提高效率）
-        self.retry_delay = 1.0    # 重試間隔
+        self.request_delay = 2.0  # 基礎請求間隔（增加以避免速率限制）
+        self.max_retries = 2      # 每個源的最大重試次數（減少以避免過多請求）
+        self.max_concurrent = 2   # 最大並發請求數（減少以避免速率限制）
+        self.retry_delay = 5.0    # 重試間隔（增加以避免速率限制）
+        self.rate_limit_window = 60  # 速率限制窗口（秒）
+        self.max_requests_per_window = 30  # 每個窗口最大請求數
+        
+        # 全局速率限制追蹤
+        self.request_history = []
+        self.last_request_time = {}
         
         # API源配置
         self.data_sources = [
@@ -115,10 +121,27 @@ class MultiSourceDataCollector:
             return False
         
         current_time = time.time()
+        
+        # 檢查全局速率限制
+        self.request_history = [t for t in self.request_history if current_time - t < self.rate_limit_window]
+        if len(self.request_history) >= self.max_requests_per_window:
+            print(f"⚠️ Global rate limit reached: {len(self.request_history)} requests in {self.rate_limit_window}s")
+            return False
+        
+        # 檢查特定源的速率限制
         time_since_last = current_time - source['last_request']
         min_interval = 60.0 / source['rate_limit']  # 最小間隔
         
-        return time_since_last >= min_interval
+        if time_since_last < min_interval:
+            wait_time = min_interval - time_since_last
+            print(f"⏳ Rate limit for {source_name}: wait {wait_time:.1f}s")
+            return False
+        
+        # 記錄請求
+        source['last_request'] = current_time
+        self.request_history.append(current_time)
+        
+        return True
     
     def _update_source_stats(self, source_name: str, success: bool):
         """更新源統計信息"""
@@ -243,7 +266,13 @@ class MultiSourceDataCollector:
                                 return True, basic_info
                                 
                     except Exception as e:
-                        print(f"Yahoo Finance variant {variant} failed: {e}")
+                        error_msg = str(e)
+                        if "429" in error_msg or "Too Many Requests" in error_msg:
+                            print(f"🚫 Rate limited for {variant}, skipping remaining variants")
+                            # 如果是速率限制，跳過剩餘變體
+                            break
+                        else:
+                            print(f"Yahoo Finance variant {variant} failed: {e}")
                         continue
                 
                 # 如果所有變體都失敗，等待後重試

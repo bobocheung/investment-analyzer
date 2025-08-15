@@ -43,8 +43,8 @@ class CacheManager:
                 return None
             
             if key in self.cache[cache_type]:
-                data, timestamp = self.cache[cache_type][key]
-                if datetime.now() - timestamp < self.ttl.get(cache_type, timedelta(minutes=5)):
+                data, expiry_time = self.cache[cache_type][key]
+                if datetime.now() < expiry_time:
                     self.stats['hits'] += 1
                     return data
                 else:
@@ -55,12 +55,19 @@ class CacheManager:
             self.stats['misses'] += 1
             return None
 
-    def set(self, cache_type: str, key: str, data):
+    def set(self, cache_type: str, key: str, data, ttl_seconds: int = None):
         """設置緩存數據"""
         with self.lock:
             if cache_type not in self.cache:
                 self.cache[cache_type] = {}
-            self.cache[cache_type][key] = (data, datetime.now())
+            
+            # 使用自定義TTL或默認TTL
+            if ttl_seconds is not None:
+                expiry_time = datetime.now() + timedelta(seconds=ttl_seconds)
+            else:
+                expiry_time = datetime.now() + self.ttl.get(cache_type, timedelta(minutes=5))
+            
+            self.cache[cache_type][key] = (data, expiry_time)
             self.stats['sets'] += 1
 
     def delete(self, cache_type: str, key: str):
