@@ -116,18 +116,8 @@ def get_market_sectors():
 def get_economic_indicators():
     """獲取經濟指標"""
     try:
-        # 檢查緩存
-        cached_data = cache_manager.get('economic_indicators', 'market_economic')
-        if cached_data:
-            print("📦 Using cached economic indicators data")
-            return jsonify(cached_data)
-        
-        # 獲取數據
+        # 強制獲取新數據（不清除緩存，讓數據收集器處理）
         indicators = collector.get_economic_indicators()
-        
-        # 緩存數據
-        cache_manager.set('economic_indicators', 'market_economic', indicators)
-        print("💾 Cached economic indicators data")
         
         return jsonify(indicators)
         
