@@ -21,11 +21,15 @@ class MultiSourceDataCollector:
         self.finnhub_key = os.getenv('FINNHUB_API_KEY', 'demo')
         self.polygon_key = os.getenv('POLYGON_API_KEY', 'demo')
         self.twelve_data_key = os.getenv('TWELVE_DATA_API_KEY', 'demo')
+        self.marketstack_key = os.getenv('MARKETSTACK_API_KEY', 'demo')
+        self.iex_cloud_key = os.getenv('IEX_CLOUD_API_KEY', 'demo')
+        self.quandl_key = os.getenv('QUANDL_API_KEY', 'demo')
         
         # 請求限制配置
-        self.request_delay = 0.5  # 基礎請求間隔
-        self.max_retries = 2      # 每個源的最大重試次數
-        self.max_concurrent = 3   # 最大並發請求數
+        self.request_delay = 0.3  # 基礎請求間隔（減少以提高速度）
+        self.max_retries = 3      # 每個源的最大重試次數（增加以提高成功率）
+        self.max_concurrent = 5   # 最大並發請求數（增加以提高效率）
+        self.retry_delay = 1.0    # 重試間隔
         
         # API源配置
         self.data_sources = [
@@ -63,6 +67,33 @@ class MultiSourceDataCollector:
                 'rate_limit': 8,   # 免費版限制
                 'last_request': 0,
                 'success_rate': 0.6,
+                'fallback': True
+            },
+            {
+                'name': 'marketstack',
+                'priority': 5,
+                'enabled': True,
+                'rate_limit': 5,   # 免費版限制
+                'last_request': 0,
+                'success_rate': 0.5,
+                'fallback': True
+            },
+            {
+                'name': 'iex_cloud',
+                'priority': 6,
+                'enabled': True,
+                'rate_limit': 10,  # 免費版限制
+                'last_request': 0,
+                'success_rate': 0.4,
+                'fallback': True
+            },
+            {
+                'name': 'quandl',
+                'priority': 7,
+                'enabled': True,
+                'rate_limit': 50,  # 免費版限制
+                'last_request': 0,
+                'success_rate': 0.3,
                 'fallback': True
             }
         ]
@@ -108,99 +139,114 @@ class MultiSourceDataCollector:
         self.stats['source_usage'][source_name] = self.stats['source_usage'].get(source_name, 0) + 1
     
     def _fetch_from_yahoo_finance(self, symbol: str) -> Tuple[bool, Dict]:
-        """從Yahoo Finance獲取數據"""
-        try:
-            if not self._can_make_request('yahoo_finance'):
-                return False, {}
-            
-            print(f"🔍 Fetching from Yahoo Finance: {symbol}")
-            
-            # 嘗試不同的符號格式
-            symbol_variants = [
-                symbol,  # 原始符號
-                symbol.replace('.HK', ''),  # 移除.HK
-                symbol.replace('.HK', '.HK'),  # 確保.HK格式
-                symbol.replace('.HK', '.SI') if '.HK' in symbol else symbol  # 嘗試新加坡格式
-            ]
-            
-            for variant in symbol_variants:
-                try:
-                    ticker = yf.Ticker(variant)
-                    
-                    # 嘗試獲取基本信息
-                    info = ticker.info
-                    
-                    # 檢查是否有有效數據
-                    if info and len(info) > 1:
-                        # 驗證關鍵字段
-                        has_price = any([
-                            info.get('currentPrice'),
-                            info.get('regularMarketPrice'),
-                            info.get('previousClose'),
-                            info.get('close'),
-                            info.get('lastPrice')
-                        ])
-                        
-                        has_name = any([
-                            info.get('longName'),
-                            info.get('shortName'),
-                            info.get('symbol'),
-                            info.get('name')
-                        ])
-                        
-                        # 如果沒有價格數據，嘗試從歷史數據獲取
-                        if not has_price:
-                            try:
-                                hist = ticker.history(period="1d")
-                                if not hist.empty:
-                                    latest = hist.iloc[-1]
-                                    info['currentPrice'] = float(latest['Close'])
-                                    info['regularMarketPrice'] = float(latest['Close'])
-                                    info['previousClose'] = float(latest['Open'])
-                                    has_price = True
-                                    print(f"📊 Got price from history: ${info['currentPrice']}")
-                            except Exception as e:
-                                print(f"Failed to get history: {e}")
-                        
-                        if has_price or has_name:
-                            print(f"✅ Yahoo Finance success for {variant}")
-                            self._update_source_stats('yahoo_finance', True)
-                            return True, info
-                    
-                    # 如果info為空，嘗試獲取歷史數據
-                    if not info or len(info) <= 1:
-                        hist = ticker.history(period="1d")
-                        if not hist.empty:
-                            # 從歷史數據構建基本信息
-                            latest = hist.iloc[-1]
-                            basic_info = {
-                                'symbol': symbol,
-                                'currentPrice': float(latest['Close']),
-                                'regularMarketPrice': float(latest['Close']),
-                                'previousClose': float(latest['Open']),
-                                'longName': symbol,
-                                'shortName': symbol,
-                                'volume': int(latest['Volume']),
-                                'marketCap': 0,
-                                'sector': '未分類',
-                                'industry': '未分類'
-                            }
-                            print(f"✅ Yahoo Finance success (from history) for {variant}")
-                            self._update_source_stats('yahoo_finance', True)
-                            return True, basic_info
-                            
-                except Exception as e:
-                    print(f"Yahoo Finance variant {variant} failed: {e}")
-                    continue
-            
-            print(f"❌ All Yahoo Finance variants failed for {symbol}")
-            self._update_source_stats('yahoo_finance', False)
-            return False, {}
+        """從Yahoo Finance獲取數據（帶重試機制）"""
+        for retry in range(self.max_retries):
+            try:
+                if not self._can_make_request('yahoo_finance'):
+                    if retry < self.max_retries - 1:
+                        time.sleep(self.retry_delay)
+                        continue
+                    return False, {}
                 
-        except Exception as e:
-            print(f"Yahoo Finance error for {symbol}: {e}")
-            self._update_source_stats('yahoo_finance', False)
-            return False, {}
+                print(f"🔍 Fetching from Yahoo Finance: {symbol} (attempt {retry + 1})")
+                
+                # 嘗試不同的符號格式
+                symbol_variants = [
+                    symbol,  # 原始符號
+                    symbol.replace('.HK', ''),  # 移除.HK
+                    symbol.replace('.HK', '.HK'),  # 確保.HK格式
+                    symbol.replace('.HK', '.SI') if '.HK' in symbol else symbol,  # 嘗試新加坡格式
+                    symbol.replace('.HK', '.TO') if '.HK' in symbol else symbol,  # 嘗試多倫多格式
+                    symbol.replace('.HK', '.L') if '.HK' in symbol else symbol,   # 嘗試倫敦格式
+                    symbol.replace('.HK', '.AX') if '.HK' in symbol else symbol,  # 嘗試澳洲格式
+                    symbol.replace('.HK', '.PA') if '.HK' in symbol else symbol   # 嘗試巴黎格式
+                ]
+                
+                for variant in symbol_variants:
+                    try:
+                        ticker = yf.Ticker(variant)
+                        
+                        # 嘗試獲取基本信息
+                        info = ticker.info
+                        
+                        # 檢查是否有有效數據
+                        if info and len(info) > 1:
+                            # 驗證關鍵字段
+                            has_price = any([
+                                info.get('currentPrice'),
+                                info.get('regularMarketPrice'),
+                                info.get('previousClose'),
+                                info.get('close'),
+                                info.get('lastPrice')
+                            ])
+                            
+                            has_name = any([
+                                info.get('longName'),
+                                info.get('shortName'),
+                                info.get('symbol'),
+                                info.get('name')
+                            ])
+                            
+                            # 如果沒有價格數據，嘗試從歷史數據獲取
+                            if not has_price:
+                                try:
+                                    hist = ticker.history(period="1d")
+                                    if not hist.empty:
+                                        latest = hist.iloc[-1]
+                                        info['currentPrice'] = float(latest['Close'])
+                                        info['regularMarketPrice'] = float(latest['Close'])
+                                        info['previousClose'] = float(latest['Open'])
+                                        has_price = True
+                                        print(f"📊 Got price from history: ${info['currentPrice']}")
+                                except Exception as e:
+                                    print(f"Failed to get history: {e}")
+                            
+                            if has_price or has_name:
+                                print(f"✅ Yahoo Finance success for {variant}")
+                                self._update_source_stats('yahoo_finance', True)
+                                return True, info
+                        
+                        # 如果info為空，嘗試獲取歷史數據
+                        if not info or len(info) <= 1:
+                            hist = ticker.history(period="1d")
+                            if not hist.empty:
+                                # 從歷史數據構建基本信息
+                                latest = hist.iloc[-1]
+                                basic_info = {
+                                    'symbol': symbol,
+                                    'currentPrice': float(latest['Close']),
+                                    'regularMarketPrice': float(latest['Close']),
+                                    'previousClose': float(latest['Open']),
+                                    'longName': symbol,
+                                    'shortName': symbol,
+                                    'volume': int(latest['Volume']),
+                                    'marketCap': 0,
+                                    'sector': '未分類',
+                                    'industry': '未分類'
+                                }
+                                print(f"✅ Yahoo Finance success (from history) for {variant}")
+                                self._update_source_stats('yahoo_finance', True)
+                                return True, basic_info
+                                
+                    except Exception as e:
+                        print(f"Yahoo Finance variant {variant} failed: {e}")
+                        continue
+                
+                # 如果所有變體都失敗，等待後重試
+                if retry < self.max_retries - 1:
+                    print(f"Retrying Yahoo Finance in {self.retry_delay} seconds...")
+                    time.sleep(self.retry_delay)
+                    continue
+                    
+            except Exception as e:
+                print(f"Yahoo Finance error for {symbol}: {e}")
+                if retry < self.max_retries - 1:
+                    time.sleep(self.retry_delay)
+                    continue
+        
+        print(f"❌ All Yahoo Finance attempts failed for {symbol}")
+        self._update_source_stats('yahoo_finance', False)
+        return False, {}
     
     def _fetch_from_alpha_vantage(self, symbol: str) -> Tuple[bool, Dict]:
         """從Alpha Vantage獲取數據"""
@@ -299,6 +345,101 @@ class MultiSourceDataCollector:
             self._update_source_stats('twelve_data', False)
             return False, {}
     
+    def _fetch_from_marketstack(self, symbol: str) -> Tuple[bool, Dict]:
+        """從MarketStack獲取數據"""
+        try:
+            if not self._can_make_request('marketstack'):
+                return False, {}
+            
+            # 移除.HK後綴
+            clean_symbol = symbol.replace('.HK', '')
+            
+            url = "http://api.marketstack.com/v1/intraday/latest"
+            params = {
+                'access_key': self.marketstack_key,
+                'symbols': clean_symbol
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                if data and 'data' in data and len(data['data']) > 0:
+                    # 轉換為統一格式
+                    converted_data = self._convert_marketstack_data(data['data'][0])
+                    self._update_source_stats('marketstack', True)
+                    return True, converted_data
+            
+            self._update_source_stats('marketstack', False)
+            return False, {}
+            
+        except Exception as e:
+            print(f"MarketStack error for {symbol}: {e}")
+            self._update_source_stats('marketstack', False)
+            return False, {}
+    
+    def _fetch_from_iex_cloud(self, symbol: str) -> Tuple[bool, Dict]:
+        """從IEX Cloud獲取數據"""
+        try:
+            if not self._can_make_request('iex_cloud'):
+                return False, {}
+            
+            # 移除.HK後綴
+            clean_symbol = symbol.replace('.HK', '')
+            
+            url = f"https://cloud.iexapis.com/stable/stock/{clean_symbol}/quote"
+            params = {
+                'token': self.iex_cloud_key
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                if data and 'symbol' in data:
+                    # 轉換為統一格式
+                    converted_data = self._convert_iex_cloud_data(data)
+                    self._update_source_stats('iex_cloud', True)
+                    return True, converted_data
+            
+            self._update_source_stats('iex_cloud', False)
+            return False, {}
+            
+        except Exception as e:
+            print(f"IEX Cloud error for {symbol}: {e}")
+            self._update_source_stats('iex_cloud', False)
+            return False, {}
+    
+    def _fetch_from_quandl(self, symbol: str) -> Tuple[bool, Dict]:
+        """從Quandl獲取數據"""
+        try:
+            if not self._can_make_request('quandl'):
+                return False, {}
+            
+            # 移除.HK後綴
+            clean_symbol = symbol.replace('.HK', '')
+            
+            url = f"https://www.quandl.com/api/v3/datasets/WIKI/{clean_symbol}/data.json"
+            params = {
+                'api_key': self.quandl_key,
+                'limit': 1
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                if data and 'dataset_data' in data and 'data' in data['dataset_data']:
+                    # 轉換為統一格式
+                    converted_data = self._convert_quandl_data(data['dataset_data']['data'][0], clean_symbol)
+                    self._update_source_stats('quandl', True)
+                    return True, converted_data
+            
+            self._update_source_stats('quandl', False)
+            return False, {}
+            
+        except Exception as e:
+            print(f"Quandl error for {symbol}: {e}")
+            self._update_source_stats('quandl', False)
+            return False, {}
+    
     def _convert_alpha_vantage_data(self, data: Dict) -> Dict:
         """轉換Alpha Vantage數據為統一格式"""
         return {
@@ -348,6 +489,58 @@ class MultiSourceDataCollector:
             'profit_margin': None,
             'current_price': float(data.get('close', 0)) if data.get('close') else 0,
             'data_source': 'twelve_data'
+        }
+    
+    def _convert_marketstack_data(self, data: Dict) -> Dict:
+        """轉換MarketStack數據為統一格式"""
+        return {
+            'symbol': data.get('symbol', ''),
+            'name': data.get('symbol', ''),
+            'sector': '未分類',
+            'industry': '未分類',
+            'market_cap': 0,
+            'pe_ratio': None,
+            'price_to_book': None,
+            'debt_to_equity': None,
+            'roe': None,
+            'profit_margin': None,
+            'current_price': float(data.get('close', 0)) if data.get('close') else 0,
+            'data_source': 'marketstack'
+        }
+    
+    def _convert_iex_cloud_data(self, data: Dict) -> Dict:
+        """轉換IEX Cloud數據為統一格式"""
+        return {
+            'symbol': data.get('symbol', ''),
+            'name': data.get('companyName', ''),
+            'sector': data.get('sector', '未分類'),
+            'industry': '未分類',
+            'market_cap': float(data.get('marketCap', 0)) if data.get('marketCap') else 0,
+            'pe_ratio': float(data.get('peRatio', 0)) if data.get('peRatio') else None,
+            'price_to_book': None,
+            'debt_to_equity': None,
+            'roe': None,
+            'profit_margin': None,
+            'current_price': float(data.get('latestPrice', 0)) if data.get('latestPrice') else 0,
+            'data_source': 'iex_cloud'
+        }
+    
+    def _convert_quandl_data(self, data: List, symbol: str) -> Dict:
+        """轉換Quandl數據為統一格式"""
+        # Quandl數據格式: [Date, Open, High, Low, Close, Volume, Ex-Dividend, Split Ratio, Adj. Open, Adj. High, Adj. Low, Adj. Close, Adj. Volume]
+        return {
+            'symbol': symbol,
+            'name': symbol,
+            'sector': '未分類',
+            'industry': '未分類',
+            'market_cap': 0,
+            'pe_ratio': None,
+            'price_to_book': None,
+            'debt_to_equity': None,
+            'roe': None,
+            'profit_margin': None,
+            'current_price': float(data[4]) if len(data) > 4 else 0,  # Close price
+            'data_source': 'quandl'
         }
     
     def _get_fallback_data(self, symbol: str) -> Dict:
@@ -522,6 +715,12 @@ class MultiSourceDataCollector:
                     success, data = self._fetch_from_finnhub(symbol)
                 elif source['name'] == 'twelve_data':
                     success, data = self._fetch_from_twelve_data(symbol)
+                elif source['name'] == 'marketstack':
+                    success, data = self._fetch_from_marketstack(symbol)
+                elif source['name'] == 'iex_cloud':
+                    success, data = self._fetch_from_iex_cloud(symbol)
+                elif source['name'] == 'quandl':
+                    success, data = self._fetch_from_quandl(symbol)
                 else:
                     continue
                 
