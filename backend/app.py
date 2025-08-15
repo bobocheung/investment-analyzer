@@ -33,8 +33,12 @@ def get_stock_data(symbol):
             print(f"📦 Using cached analysis for {symbol}")
             return jsonify(cached_data)
         
-        # 收集數據
-        data = collector.collect_all_data(symbol)
+        # 收集數據（嘗試多源）
+        try:
+            data = collector.get_stock_info_async(symbol)
+        except Exception as multi_error:
+            print(f"Multi-source collection failed for {symbol}: {multi_error}, falling back to sync")
+            data = collector.collect_all_data(symbol)
         
         # 分析數據
         analysis_result = analyzer.analyze_stock(data)
@@ -244,6 +248,31 @@ def remove_from_watchlist(symbol):
         
         return jsonify({'message': f'{symbol} not found in watchlist'})
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/data/sources')
+def get_data_sources():
+    """獲取數據源統計信息"""
+    try:
+        if hasattr(collector, 'multi_source') and collector.multi_source:
+            stats = collector.multi_source.get_stats()
+            return jsonify(stats)
+        else:
+            return jsonify({'message': 'Multi-source collector not available'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/data/sources/<source_name>/toggle')
+def toggle_data_source(source_name):
+    """啟用或禁用數據源"""
+    try:
+        enabled = request.args.get('enabled', 'true').lower() == 'true'
+        if hasattr(collector, 'multi_source') and collector.multi_source:
+            collector.multi_source.enable_source(source_name, enabled)
+            return jsonify({'message': f'{source_name} {"enabled" if enabled else "disabled"}'})
+        else:
+            return jsonify({'error': 'Multi-source collector not available'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

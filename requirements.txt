@@ -7,6 +7,8 @@ numpy==1.24.3
 requests==2.31.0
 schedule==1.2.0
 python-dotenv==1.0.0
+aiohttp==3.8.5
+asyncio
 
 # Optional PDF generation dependencies
 # Uncomment if you want PDF report generation

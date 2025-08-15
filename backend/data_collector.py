@@ -18,6 +18,25 @@ class DataCollector:
         self.fred_api_key = os.getenv('FRED_API_KEY', 'demo')
         self.request_delay = 1.0  # 請求間隔（秒）
         self.max_retries = 3  # 最大重試次數
+        
+        # 嘗試導入多源收集器
+        try:
+            from multi_source_collector import multi_source_collector
+            self.multi_source = multi_source_collector
+            self.use_multi_source = True
+            print("🚀 Multi-source data collection enabled")
+        except ImportError:
+            self.multi_source = None
+            self.use_multi_source = False
+            print("⚠️ Multi-source data collection not available, using fallback")
+    
+    def get_stock_info_async(self, symbol: str) -> Dict:
+        """獲取股票信息（支持多源）"""
+        if self.use_multi_source and self.multi_source:
+            return self.multi_source.get_stock_info_multi_source(symbol)
+        else:
+            # 回退到同步方法
+            return self.get_stock_info(symbol)
     
     def safe_yfinance_request(self, symbol, max_retries=3, delay=1.0):
         """安全的yfinance請求，帶重試機制"""
