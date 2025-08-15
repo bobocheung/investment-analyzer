@@ -593,23 +593,74 @@ async function loadEconomicIndicators() {
 function displayEconomicIndicators(data) {
     elements.economicIndicators.innerHTML = '';
     
+    // 檢查是否有數據
+    if (!data || Object.keys(data).length === 0) {
+        elements.economicIndicators.innerHTML = '<div class="empty-state">經濟指標載入中...</div>';
+        return;
+    }
+    
+    console.log('Economic indicators data:', data);
+    
     Object.entries(data).forEach(([key, indicator]) => {
         const item = document.createElement('div');
         item.className = 'indicator-item';
+        
+        // 格式化數值顯示
+        let displayValue = indicator.value || 'N/A';
+        let changeClass = '';
+        
+        // 如果有變化數據，添加顏色
+        if (indicator.change !== undefined) {
+            if (indicator.change > 0) {
+                changeClass = 'positive';
+                displayValue = `${indicator.value} (+${indicator.change}%)`;
+            } else if (indicator.change < 0) {
+                changeClass = 'negative';
+                displayValue = `${indicator.value} (${indicator.change}%)`;
+            }
+        }
+        
         item.innerHTML = `
             <span class="indicator-label">${getIndicatorName(key)}</span>
-            <span class="indicator-value">${indicator.value || 'N/A'}</span>
+            <span class="indicator-value ${changeClass}">${displayValue}</span>
+            ${indicator.date ? `<span class="indicator-date">${indicator.date}</span>` : ''}
         `;
+        
         elements.economicIndicators.appendChild(item);
     });
+    
+    // 顯示數據來源信息
+    const sourceInfo = document.createElement('div');
+    sourceInfo.className = 'source-info';
+    sourceInfo.innerHTML = `<small>數據來源: ${Object.values(data)[0]?.source || '未知'} | 更新時間: ${new Date().toLocaleString('zh-TW')}</small>`;
+    elements.economicIndicators.appendChild(sourceInfo);
 }
 
 function getIndicatorName(key) {
     const names = {
+        // 港股市場指標
+        '恆生指數': '恆生指數',
+        '上證指數': '上證指數',
+        '美元兌港元': '美元兌港元',
+        '港股通資金': '港股通資金',
+        '深證成指': '深證成指',
+        '創業板指': '創業板指',
+        '恆生科技指數': '恆生科技指數',
+        '恆生國企指數': '恆生國企指數',
+        
+        // 宏觀經濟指標
         'GDP': 'GDP',
         'UNEMPLOYMENT': '失業率',
         'INFLATION': '通脹率',
-        'INTEREST_RATE': '利率'
+        'INTEREST_RATE': '利率',
+        'CPI': '消費者物價指數',
+        'PPI': '生產者物價指數',
+        'PMI': '採購經理人指數',
+        
+        // 其他指標
+        '原油價格': '原油價格',
+        '黃金價格': '黃金價格',
+        '人民幣匯率': '人民幣匯率'
     };
     return names[key] || key;
 }
