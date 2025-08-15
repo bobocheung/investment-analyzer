@@ -190,10 +190,16 @@ def get_watchlist():
         watchlist_file = 'data/watchlist.json'
         if os.path.exists(watchlist_file):
             with open(watchlist_file, 'r', encoding='utf-8') as f:
-                watchlist = json.load(f)
+                data = json.load(f)
+                # 支持兩種格式：直接數組或帶symbols字段的對象
+                if isinstance(data, list):
+                    watchlist = data
+                else:
+                    watchlist = data.get('symbols', [])
             return jsonify(watchlist)
         return jsonify([])
     except Exception as e:
+        print(f"Error reading watchlist: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/watchlist', methods=['POST'])
@@ -203,18 +209,33 @@ def add_to_watchlist():
         data = request.json
         symbol = data.get('symbol')
         
-        watchlist_file = 'data/watchlist.json'
-        watchlist = []
+        if not symbol:
+            return jsonify({'error': 'Symbol is required'}), 400
         
+        watchlist_file = 'data/watchlist.json'
+        
+        # 讀取現有數據
         if os.path.exists(watchlist_file):
             with open(watchlist_file, 'r', encoding='utf-8') as f:
-                watchlist = json.load(f)
+                data = json.load(f)
+                if isinstance(data, list):
+                    watchlist = data
+                else:
+                    watchlist = data.get('symbols', [])
+        else:
+            watchlist = []
         
         if symbol not in watchlist:
             watchlist.append(symbol)
             
+            # 保存為標準格式
+            watchlist_data = {
+                'symbols': watchlist,
+                'last_updated': datetime.now().isoformat()
+            }
+            
             with open(watchlist_file, 'w', encoding='utf-8') as f:
-                json.dump(watchlist, f, ensure_ascii=False, indent=2)
+                json.dump(watchlist_data, f, ensure_ascii=False, indent=2)
             
             # 失效相關緩存
             cache_manager.invalidate_stock_data(symbol)
@@ -224,6 +245,7 @@ def add_to_watchlist():
             return jsonify({'message': f'{symbol} already in watchlist'})
             
     except Exception as e:
+        print(f"Error adding to watchlist: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/watchlist/<symbol>', methods=['DELETE'])
@@ -233,13 +255,23 @@ def remove_from_watchlist(symbol):
         watchlist_file = 'data/watchlist.json'
         if os.path.exists(watchlist_file):
             with open(watchlist_file, 'r', encoding='utf-8') as f:
-                watchlist = json.load(f)
+                data = json.load(f)
+                if isinstance(data, list):
+                    watchlist = data
+                else:
+                    watchlist = data.get('symbols', [])
             
             if symbol in watchlist:
                 watchlist.remove(symbol)
                 
+                # 保存為標準格式
+                watchlist_data = {
+                    'symbols': watchlist,
+                    'last_updated': datetime.now().isoformat()
+                }
+                
                 with open(watchlist_file, 'w', encoding='utf-8') as f:
-                    json.dump(watchlist, f, ensure_ascii=False, indent=2)
+                    json.dump(watchlist_data, f, ensure_ascii=False, indent=2)
                 
                 # 失效相關緩存
                 cache_manager.invalidate_stock_data(symbol)
@@ -249,6 +281,7 @@ def remove_from_watchlist(symbol):
         return jsonify({'message': f'{symbol} not found in watchlist'})
         
     except Exception as e:
+        print(f"Error removing from watchlist: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/data/sources')
@@ -275,6 +308,22 @@ def toggle_data_source(source_name):
             return jsonify({'error': 'Multi-source collector not available'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# 靜態文件路由
+@app.route('/manifest.json')
+def manifest():
+    """返回PWA manifest文件"""
+    return send_from_directory('frontend', 'manifest.json')
+
+@app.route('/icon.svg')
+def icon():
+    """返回應用圖標"""
+    return send_from_directory('frontend', 'icon.svg')
+
+@app.route('/sw.js')
+def service_worker():
+    """返回Service Worker文件"""
+    return send_from_directory('frontend', 'sw.js')
 
 if __name__ == '__main__':
     # 設置端口

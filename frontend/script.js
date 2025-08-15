@@ -92,8 +92,13 @@ function initializeApp() {
     // 檢查是否支持 Service Worker (PWA)
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js')
-            .then(registration => console.log('SW registered'))
-            .catch(error => console.log('SW registration failed'));
+            .then(registration => {
+                console.log('SW registered successfully:', registration);
+            })
+            .catch(error => {
+                console.log('SW registration failed:', error);
+                // 如果註冊失敗，不影響主要功能
+            });
     }
 }
 
